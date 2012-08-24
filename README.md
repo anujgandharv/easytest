@@ -1,4 +1,4 @@
-JUnit Params : A Parameterized approach to Testing using JUnit
+EasyTest : A Parameterized approach to Testing using JUnit
 ------------------------------------------------------------------------------------------------------
 
 An extension of JUnit to perform Data Driven Testing using annotations.

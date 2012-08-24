@@ -6,8 +6,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- The project details. -->
-        <groupId>org.junit.experimental.theories.ext</groupId>
-        <artifactId>junit-param</artifactId>
+        <groupId>org.junit.easytest</groupId>
+        <artifactId>easytest</artifactId>
 	<packaging>jar</packaging>
 	<name>JUnit Extension to ease Data Driven Testing</name>
 	<description>An extension to the existing JUnit Runner to perform Data Driven Testing
