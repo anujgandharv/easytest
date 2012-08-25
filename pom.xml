@@ -4,15 +4,36 @@
 
     <!-- This is a version 4 POM file. -->
     <modelVersion>4.0.0</modelVersion>
-
+    <parent>
+       <artifactId>oss-parent</artifactId>
+       <groupId>org.sonatype.oss</groupId>
+       <version>7</version>
+    </parent>
     <!-- The project details. -->
-        <groupId>org.easytest</groupId>
-        <artifactId>easytest</artifactId>
+    <groupId>org.easytest</groupId>
+    <artifactId>easytest</artifactId>
 	<packaging>jar</packaging>
-	<name>JUnit Extension to ease Data Driven Testing</name>
-	<description>An extension to the existing JUnit Runner to perform Data Driven Testing
-    </description>
+	<name>EasyTest to ease Data Driven Testing</name>
+	<description>An extension to the existing JUnit Runner to perform Data Driven Testing</description>
+    <url>https://github.com/anujgandharv/easytest</url>
 	<version>1.0.0</version>
+ 
+    <developers>
+       <developer>
+       <id>anujgandharv</id>
+       <name>Anuj Kumar</name>
+       <email>anuj.gandharv@gmail.com</email>
+       <url>http://www.kumaranuj.com</url>
+       </developer>
+    </developers>
+    <licenses>
+       <license>
+       <name>Apache 2</name>
+       <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+       <distribution>repo</distribution>
+       <comments>A business-friendly OSS license</comments>
+       </license>
+    </licenses>
 
     <build>
         <plugins>
