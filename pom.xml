@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- The project details. -->
-        <groupId>org.junit.easytest</groupId>
+        <groupId>org.easytest</groupId>
         <artifactId>easytest</artifactId>
 	<packaging>jar</packaging>
 	<name>JUnit Extension to ease Data Driven Testing</name>

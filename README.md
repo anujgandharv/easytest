@@ -1,4 +1,4 @@
-EasyTest : A Parameterized approach to Testing using JUnit
+EasyTest : A Data Driven Testing approach to JUnit
 ------------------------------------------------------------------------------------------------------
 
 An extension of JUnit to perform Data Driven Testing using annotations.
@@ -61,7 +61,7 @@ LoaderFactory is a Factory class that is responsible for returning the right typ
 5)DataContext class that contains thread-local variables that stores test data as well as the name of the currently executing test method.
 
 
-Some Examples of using the junit theories extension
+Some Examples of using the EasyTest
 ---------------------------------------------------
 <B>CASE 1</B>: Provides input test data in the form of CSV file at the class level, that is used by the test methods.
 
