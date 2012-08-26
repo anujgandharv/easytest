@@ -69,20 +69,20 @@ import org.slf4j.LoggerFactory;
  *
  *@author Anuj Kumar
  */
-public class ParamRunner extends BlockJUnit4ClassRunner {
+public class EasyTestRunner extends BlockJUnit4ClassRunner {
     
     /**
      * An instance of logger associated with the test framework.
      */
-    protected static final Logger PARAM_LOG = LoggerFactory.getLogger(ParamRunner.class);
+    protected static final Logger PARAM_LOG = LoggerFactory.getLogger(EasyTestRunner.class);
 
     /**
      * 
-     * Construct a new ParamRunner
+     * Construct a new EasyTestRunner
      * @param klass the test class whose test methods needs to be executed
      * @throws InitializationError if any error occurs
      */
-    public ParamRunner(Class<?> klass) throws InitializationError {
+    public EasyTestRunner(Class<?> klass) throws InitializationError {
         super(klass);
         loadData(klass, null);
         
@@ -199,7 +199,7 @@ public class ParamRunner extends BlockJUnit4ClassRunner {
         /**
          * An instance of logger associated with the test framework.
          */
-        protected static final Logger LOG = LoggerFactory.getLogger(ParamRunner.ParamAnchor.class);
+        protected static final Logger LOG = LoggerFactory.getLogger(EasyTestRunner.ParamAnchor.class);
         
         private int successes= 0;
 
