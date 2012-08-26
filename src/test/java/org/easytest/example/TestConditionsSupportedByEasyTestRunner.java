@@ -9,7 +9,7 @@ import org.easytest.annotation.CustomLoader;
 import org.easytest.annotation.Param;
 import org.easytest.annotation.TestData;
 
-import org.easytest.runner.ParamRunner;
+import org.easytest.runner.EasyTestRunner;
 
 import org.easytest.example.editors.LibraryIdEditor;
 
@@ -35,13 +35,13 @@ import org.junit.runner.RunWith;
 
 /**
  * 
- * An example test class that tries to list different scenarios of using {@link ParamRunner} and its supports annotations and classes.
+ * An example test class that tries to list different scenarios of using {@link EasyTestRunner} and its supports annotations and classes.
  * We are loading the test data at the class level, but the user can override the data at the method level as well.
  *
  */
-@RunWith(ParamRunner.class)
+@RunWith(EasyTestRunner.class)
 @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
-public class TestConditionsSupportedByParamRunner {
+public class TestConditionsSupportedByEasyTestRunner {
     
     /**
      * A Junit annotated({@link Rule}) expected Exception rule that gives us the ability to specify 
