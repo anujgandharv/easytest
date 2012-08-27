@@ -33,7 +33,7 @@ What this code base consists of:
 
 This code base consists of :
 
-1) A customized JUnit Runner(extending BlockJUnit4Runner) that provides the test data in a consistent and user controlled manner. It is called ParamRunner. 
+1) A customized JUnit Runner(extending BlockJUnit4Runner) that provides the test data in a consistent and user controlled manner. It is called EasyTestRunner. 
 This Runner works on our favorite annotation @Test from JUnit and also supports passing parameters to the test method. And this is not its only selling point.
 
 2) A Data Loading Strategy consisting of interface Loader and classes LoaderFactory and CSVDataLoader and an Enum FileType. 
@@ -65,9 +65,9 @@ Some Examples of using the EasyTest
 ---------------------------------------------------
 <B>CASE 1</B>: Provides input test data in the form of CSV file at the class level, that is used by the test methods.
 
-    @RunWith(ParamRunner.class)
+    @RunWith(EasyTestRunner.class)
     @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
-    public class TestConditionsSupportedByParamRunner {
+    public class TestConditionsSupportedByEasyTestRunner {
 
 
     /**
@@ -84,8 +84,8 @@ Some Examples of using the EasyTest
     
 <B>CASE 2</B>: User provides input test data in the form of CSV file at the method level only.
 
-    @RunWith(ParamRunner.class)
-    public class TestConditionsSupportedByParamRunner {
+    @RunWith(EasyTestRunner.class)
+    public class TestConditionsSupportedByEasyTestRunner {
 
 
     /**
@@ -103,9 +103,9 @@ Some Examples of using the EasyTest
     
 <B>CASE 3</B>: User provides input test data in the form of CSV file at the Class level as well as method level. In this case method level test data takes priority over class level test data.
 
-    @RunWith(ParamRunner.class)
+    @RunWith(EasyTestRunner.class)
     @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
-    public class TestConditionsSupportedByParamRunner {
+    public class TestConditionsSupportedByEasyTestRunner {
 
 
     /**
@@ -123,9 +123,9 @@ Some Examples of using the EasyTest
 
 <B>CASE 4</B>: User can also provide its custom Data Loader both at the Class level as well as at the method level. The below example shows using CustomLoader at the method level :
 
-    @RunWith(ParamRunner.class)
+    @RunWith(EasyTestRunner.class)
     @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
-    public class TestConditionsSupportedByParamRunner {
+    public class TestConditionsSupportedByEasyTestRunner {
 
 
     /**
@@ -144,9 +144,9 @@ Some Examples of using the EasyTest
     
 <B>CASE 5</B>: User can also use their custom defined Objects as parameters in the test case. In this case LibraryId and ItenmId will be resolved using RegsitryEditorSupport of java:
 
-    @RunWith(ParamRunner.class)
+    @RunWith(EasyTestRunner.class)
     @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
-    public class TestConditionsSupportedByParamRunner {
+    public class TestConditionsSupportedByEasyTestRunner {
 
 
     /**
