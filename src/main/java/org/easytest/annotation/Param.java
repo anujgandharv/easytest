@@ -1,5 +1,8 @@
 package org.easytest.annotation;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+
 import org.easytest.util.DataContext;
 
 import org.easytest.converter.Converter;
@@ -28,27 +31,27 @@ import org.junit.experimental.theories.PotentialAssignment;
  * method as many times as there are number of data sets to be run against that particular method. For example, if the
  * user has specified 5 data set for a single junit method, Junit will call the method five times, each time providing
  * the test data that was provided by the user.
- * <br>The annotation is used in conjunction with {@link TestData} annotation</br>
+ * <br>The annotation is normally used in conjunction with {@link DataLoader} annotation although it can be used with it as well.</br>
  * <br>
  * The annotation contains a single optional field :
  * 
- * <li><B> paramName</B> : the name of the parameter(OPTIONAL) as is present in the input test data file.
- * <li>In case the paramName value is not specified and the Parameter type is Map, {@link DataSupplier} simply
+ * <li><B> name</B> : the name of the parameter(OPTIONAL) as is present in the input test data file.
+ * <li>In case the param name value is not specified and the Parameter type is Map, {@link DataSupplier} simply
  * provides the HashMap instance that was created while loading the data. This {@link HashMap} represents a 
  * single set of test data for the test method.</li>
- * <li> In case the paramName is not specified and the parameter type is a strongly typed Object of the client using this annotation(for eg LibraryId),
+ * <li> In case the param name is not specified and the parameter type is a strongly typed Object of the client using this annotation(for eg LibraryId),
  * it will try to search for the parameter with the name which is the class name of the Object parameter.</li>
- * <li>In case the paramName is specified the framework will look for the parameter with the specified name in the loaded test data.
+ * <li>In case the param name is specified the framework will look for the parameter with the specified name in the loaded test data.
  * 
  *  Moreover, the framework supports PropertyEditors support for strongly typed objects.
  *  If you have a custom object and its property editor in the same package, the JUnit framework 
  *  will convert the String value to your specified custom object by calling the right property editor and pass an instance of custom object to your test case.
  *  This provides the users facility to write test cases such as this :
  *  <code>
- *   @Theory
- *   @TestData(filePaths ={ "getItemsData.csv" })
- *   public void testWithStrongParameters(@DataProvider()
- *   LibraryId id , @DataProvider(paramName="itemid") ItemId itemId) {
+ *   @Test
+ *   @DataLoader(filePaths ={ "getItemsData.csv" })
+ *   public void testWithStrongParameters(@Param()
+ *   LibraryId id , @Param(name="itemid") ItemId itemId) {
  *      ....
  *
  *   }
@@ -56,9 +59,9 @@ import org.junit.experimental.theories.PotentialAssignment;
  * <br><li>Example of using Map to get the entire data:</li></br>
  * <br>
  * <code><br>
- *   @Theory 
- *   @TestData(filePaths= {"getItemsData.csv" })<br>
- *   public void testGetItemsWithoutFileType(<B>@DataProvider()</B> Map<String, String> inputData) {<br>
+ *   @Test
+ *   @DataLoader(filePaths= {"getItemsData.csv" })<br>
+ *   public void testGetItemsWithoutFileType(<B>@Paramr()</B> Map<String, String> inputData) {<br>
  *      ........
  *
  *   }</code>
@@ -67,6 +70,7 @@ import org.junit.experimental.theories.PotentialAssignment;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @ParametersSuppliedBy(Param.DataSupplier.class)
+@Target({ElementType.METHOD , ElementType.TYPE , ElementType.PARAMETER})
 public @interface Param {
 
     /** The name of the parameter for which value needs to be fetched from the data set */
@@ -95,8 +99,8 @@ public @interface Param {
                 		"In case you are using ParametersSuppliedBy annotation, make sure you are using the right ParameterSupplier subclass.");
             }
             List<PotentialAssignment> listOfData = null;
-            Map<String, List<Map<String, String>>> data = DataContext.getData();
-            List<Map<String, String>> methodData = data.get(value);
+            Map<String, List<Map<String, Object>>> data = DataContext.getData();
+            List<Map<String, Object>> methodData = data.get(value);
             if(methodData == null){
                 Assert.fail("Data does not exist for the specified method with name :" + value + " .Please check " +
                 		"that the Data file contains the data for the given method name. A possible cause could be spelling mismatch.");
@@ -116,9 +120,9 @@ public @interface Param {
          * @param convertFrom the data to convert from
          * @return a list of {@link PotentialAssignment} that contains map value
          */
-        private List<PotentialAssignment> convert(List<Map<String, String>> convertFrom) {
+        private List<PotentialAssignment> convert(List<Map<String, Object>> convertFrom) {
             List<PotentialAssignment> finalData = new ArrayList<PotentialAssignment>();
-            for (Map<String, String> map : convertFrom) {
+            for (Map<String, Object> map : convertFrom) {
                 finalData.add(PotentialAssignment.forValue("", map));
             }
             return finalData;
@@ -133,11 +137,11 @@ public @interface Param {
          * @param convertFrom the list of raw data read from the CSV file.
          * @return list of {@link PotentialAssignment}
          */
-        private List<PotentialAssignment> convert(Class idClass, String paramName, List<Map<String, String>> convertFrom) {
+        private List<PotentialAssignment> convert(Class idClass, String paramName, List<Map<String, Object>> convertFrom) {
             List<PotentialAssignment> finalData = new ArrayList<PotentialAssignment>();
             PropertyEditor editor = PropertyEditorManager.findEditor(idClass);
             if (editor != null) {
-                for (Map<String, String> object : convertFrom) {
+                for (Map<String, Object> object : convertFrom) {
                     if (paramName != null && !paramName.isEmpty()) {
                         if(getStringValue(paramName, object) != null){
                             editor.setAsText(getStringValue(paramName, object));
@@ -158,8 +162,7 @@ public @interface Param {
                 //Try to find the Converter
                 Converter<?> converter = ConverterManager.findConverter(idClass);
                 if(converter != null){
-                    for(Map<String, String> object : convertFrom){
-                        //TODO: We might have to do something here to remove the data from Map
+                    for(Map<String, Object> object : convertFrom){
                         finalData.add(PotentialAssignment.forValue("", converter.convert(object)));
                     }
                 }else{
@@ -176,7 +179,7 @@ public @interface Param {
          * @param data the data that contains the include Holdings value
          * @return String value or null if it is not set in the data.
          */
-        private static String getStringValue(String paramName , Map<String , String> data){
+        private static String getStringValue(String paramName , Map<String , Object> data){
             String value = null;
             if(data.get(paramName) != null){
                 value = data.get(paramName).toString();
