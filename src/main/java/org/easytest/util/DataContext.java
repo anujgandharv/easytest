@@ -21,7 +21,7 @@ public class DataContext {
     /**
      * DataContext thread local variable that will hold the data for easy consumption by the test cases.
      */
-    public static final ThreadLocal<Map<String, List<Map<String , String>>>> dataContextThreadLocal = new ThreadLocal<Map<String, List<Map<String , String>>>>();
+    public static final ThreadLocal<Map<String, List<Map<String , Object>>>> dataContextThreadLocal = new ThreadLocal<Map<String, List<Map<String , Object>>>>();
     
     /**
      * Test Method Name Context thread local variable that will hold the name of the test method currently executing. This name is supplied as part of the @TestName annotation.
@@ -33,8 +33,8 @@ public class DataContext {
      * 
      * @param  data to set
      */
-    public static void setData(Map<String, List<Map<String , String>>> data) {
-        Map<String, List<Map<String , String>>> testData = dataContextThreadLocal.get();
+    public static void setData(Map<String, List<Map<String , Object>>> data) {
+        Map<String, List<Map<String , Object>>> testData = dataContextThreadLocal.get();
         if(testData == null || testData.isEmpty()){
             dataContextThreadLocal.set(data);
         }else{  
@@ -51,7 +51,7 @@ public class DataContext {
      * 
      * @return The data
      */
-    public static Map<String, List<Map<String , String>>> getData() {
+    public static Map<String, List<Map<String , Object>>> getData() {
         return dataContextThreadLocal.get();
     }
 

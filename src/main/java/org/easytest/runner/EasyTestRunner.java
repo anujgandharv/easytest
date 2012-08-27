@@ -1,24 +1,17 @@
 package org.easytest.runner;
 
-import org.easytest.util.DataContext;
-
-import org.easytest.loader.FileType;
-import org.easytest.loader.Loader;
-import org.easytest.loader.LoaderFactory;
-
-import org.easytest.annotation.CustomLoader;
-import org.easytest.annotation.Param;
-import org.easytest.annotation.TestData;
-
-
-
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.easytest.annotation.DataLoader;
+import org.easytest.annotation.Param;
+import org.easytest.loader.Loader;
+import org.easytest.loader.LoaderFactory;
+import org.easytest.loader.LoaderType;
+import org.easytest.util.DataContext;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.theories.DataPoint;
@@ -52,11 +45,11 @@ import org.slf4j.LoggerFactory;
  * 
  * <br><br>
  * <B>
- * A user can specify the test data at the class level as well, using the {@link TestData} annotation and override it at the method level. </B><br>
+ * A user can specify the test data at the class level as well, using the {@link DataLoader} annotation and override it at the method level. </B><br>
  * This is extremly beneficial in cases, where the user just wants to load the data once and then reuse it for all the test methods.
- * If the user wants, then he can always override the test data at the method level by specifying the {@link TestData} annotation at the method level.
+ * If the user wants, then he can always override the test data at the method level by specifying the {@link DataLoader} annotation at the method level.
  * <br><br>
- * In addition, this runner also introduces a new way for the user to specify the test data using {@link TestData} annotation.
+ * In addition, this runner also introduces a new way for the user to specify the test data using {@link DataLoader} annotation.
  * 
  * <br><br>
  * There is also a {@link Param} annotation that is an extension of {@link ParametersSuppliedBy} annotation to 
@@ -132,61 +125,90 @@ public class EasyTestRunner extends BlockJUnit4ClassRunner {
     
     @SuppressWarnings("unchecked")
     protected static void loadData(Class testClass , FrameworkMethod method){
-        boolean useTestClass = true;
         if(testClass == null && method == null){
             Assert.fail("The framework should provide either the testClass parameter or the method parameter in order to load the test data.");
         }
         //We give priority to Class Loading and then to method loading
-        TestData testData = null;
+        DataLoader testData = null;
         if(testClass != null){
-            testData = (TestData)testClass.getAnnotation(TestData.class);
+            testData = (DataLoader)testClass.getAnnotation(DataLoader.class);
         }else{
-            testData = method.getAnnotation(TestData.class);
-            useTestClass = false;
+            testData = method.getAnnotation(DataLoader.class);
         }
         if(testData != null){
             String[] dataFiles = testData.filePaths();
-            FileType fileType = testData.fileType();
+            LoaderType loaderType = testData.loaderType();
             Loader dataLoader = null;
-            if(FileType.CUSTOM.equals(fileType)){
+            if(LoaderType.CUSTOM.equals(loaderType)){
                 PARAM_LOG.info("User specified to use custom Loader. Trying to get the custom loader.");
-                CustomLoader customLoader = null;
-                if(useTestClass){
-                    customLoader = (CustomLoader) testClass.getAnnotation(CustomLoader.class);
+                if(testData.loader() == null){
+                    Assert.fail("Specified the LoaderType as CUSTOM but did not specify loader"+ 
+                        " attribute. A loaderType of CUSTOM requires the loader " +
+                               "attribute specifying " +
+                               "the Custom Loader Class which implements Loader interface.");
                 }else{
-                    customLoader = method.getAnnotation(CustomLoader.class);
+                    try {
+                        Class<? extends Loader> loaderClass = testData.loader();
+                        dataLoader = loaderClass.newInstance();
+                    } catch (Exception e) {
+                        throw new RuntimeException("Exception occured while trying to instantiate a class of type :" + testData.loader(),e);
+                    } 
+                }
+            }else if(dataFiles.length == 0){
+                //No files specified, implies user wants to load data with custom loader
+                if(testData.loader() == null){
+                    Assert.fail("Specified the LoaderType as CUSTOM but did not specify loader"+ 
+                        " attribute. A loaderType of CUSTOM requires the loader " +
+                               "attribute specifying " +
+                               "the Custom Loader Class which implements Loader interface.");
+                }else{
+                    try {
+                        Class<? extends Loader> loaderClass = testData.loader();
+                        dataLoader = loaderClass.newInstance();
+                    } catch (Exception e) {
+                        throw new RuntimeException("Exception occured while trying to instantiate a class of type :" + testData.loader(),e);
+                    } 
                 }
                 
-                if(customLoader != null){
-                    Class loaderClass = customLoader.loader();
-                    try {
-                        dataLoader = (Loader) loaderClass.newInstance();
-                    } catch (Exception e) {
-                        throw new RuntimeException("Exception occured while trying to " +
-                                "create an instance of custom Loader Class :" + loaderClass , e);
-                    }
-                }else{
-                    Assert.fail("Specified the FileType as CUSTOM but did not specify CustomLoader.class"+ 
-                         " annotation. A fileType of CUSTOM requires the CustomLoader " +
-                                "annotation to be specified on the method with its 'loader' attribute specifying " +
-                                "the Custom Loader Class which implements : Loader interface.");
-                }
-                 
             }else{
-                dataLoader = LoaderFactory.getLoader(fileType);
+                //user has specified data files and the data fileType is also not custom.
+                dataLoader = LoaderFactory.getLoader(loaderType);
             }
+            
             
             
             if(dataLoader == null){
                 Assert.fail("The framework currently does not support the specified Loader type. " +
-                        "You can provide the custom Loader by choosing FileType.CUSTOM in TestData " +
-                        "annotation and providing your custom loader using @CustomLoader annotation." );
+                        "You can provide the custom Loader by choosing LoaderType.CUSTOM in TestData " +
+                        "annotation and providing your custom loader using @DataLoader annotation." );
             }else{
-                Map<String, List<Map<String, String>>> data = dataLoader.loadData(dataFiles);
+                Map<String, List<Map<String, Object>>> data = dataLoader.loadData(dataFiles);
                 DataContext.setData(data);
                 
             }
         }
+        
+//        else{
+//            DataLoader customLoader = null;
+//            Loader dataLoader = null;
+//            //try to see if there is still a DataLoader annotation.
+//            if(!useTestClass){
+//                customLoader = method.getAnnotation(DataLoader.class);
+//            }else{
+//                customLoader = (DataLoader) testClass.getAnnotation(DataLoader.class);
+//            }
+//            if(customLoader!= null){
+//                Class loaderClass = customLoader.loader();
+//                try {
+//                    dataLoader = (Loader) loaderClass.newInstance();
+//                    Map<String, List<Map<String, Object>>> data = dataLoader.loadData(null);
+//                    DataContext.setData(data);
+//                } catch (Exception e) {
+//                    throw new RuntimeException("Exception occured while trying to " +
+//                            "create an instance of custom Loader Class :" + loaderClass , e);
+//                }
+//            }
+//        }
     }
 
     /**
@@ -262,46 +284,7 @@ public class EasyTestRunner extends BlockJUnit4ClassRunner {
             fTestClass= testClass;
             listOfAssignments = new ArrayList<Assignments>();
             loadData(null , method);
-//            if(testData != null){
-//                String[] dataFiles = testData.filePaths();
-//                FileType fileType = testData.fileType();
-//                Loader dataLoader = null;
-//                if(FileType.CUSTOM.equals(fileType)){
-//                    LOG.info("User specified to use custom Loader. Trying to get the custom loader.");
-//                    CustomLoader customLoader = fTestMethod.getAnnotation(CustomLoader.class);
-//                    if(customLoader != null){
-//                        Class loaderClass = customLoader.loader();
-//                        try {
-//                            dataLoader = (Loader) loaderClass.newInstance();
-//                        } catch (Exception e) {
-//                            throw new RuntimeException("Exception occured while trying to " +
-//                                    "create an instance of custom Loader Class :" + loaderClass , e);
-//                        }
-//                    }else{
-//                        Assert.fail("Specified the FileType as CUSTOM but did not specify CustomLoader.class"+ 
-//                             " annotation. A fileType of CUSTOM requires the CustomLoader " +
-//                            		"annotation to be specified on the method with its 'loader' attribute specifying " +
-//                            		"the Custom Loader Class which implements : Loader interface.");
-//                    }
-//                     
-//                }else{
-//                    dataLoader = LoaderFactory.getLoader(fileType);
-//                }
-//                
-//                
-//                if(dataLoader == null){
-//                    Assert.fail("The framework currently does not support the specified Loader type. " +
-//                    		"You can provide the custom Loader by choosing FileType.CUSTOM in TestData " +
-//                    		"annotation and providing your custom loader using @CustomLoader annotation." );
-//                }else{
-//                    Map<String, List<Map<String, String>>> data = dataLoader.loadData(dataFiles);
-//                    DataContext.setData(data);
-//                    
-//                }
-//            }else{
-//                LOG.debug("Annotation TestData is not specified on the method : " + method.getName() + 
-//                    " . Assuming that the user wants to use ParametersSuppliedBy annotation. ");
-//            }
+
             DataContext.setMethodName(method.getName());
         }
 

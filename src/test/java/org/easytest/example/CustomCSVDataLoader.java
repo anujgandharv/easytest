@@ -74,8 +74,8 @@ public class CustomCSVDataLoader implements Loader{
      * @throws IOException if an IO Exception occurs
      */
     public CustomCSVDataLoader(final List<InputStream> csvInputStreams) throws IOException {
-        Map<String, List<Map<String, String>>> data = null;
-        Map<String, List<Map<String, String>>> finalData = new HashMap<String, List<Map<String, String>>>();
+        Map<String, List<Map<String, Object>>> data = null;
+        Map<String, List<Map<String, Object>>> finalData = new HashMap<String, List<Map<String, Object>>>();
         for(InputStream stream : csvInputStreams){
             data = loadFromSpreadsheet(stream);
             finalData.putAll(data);
@@ -92,9 +92,9 @@ public class CustomCSVDataLoader implements Loader{
      * @return a Map of method name and the list of associated test data with that method name
      * @throws IOException if an IO Exception occurs
      */
-    private Map<String, List<Map<String, String>>> LoadCSVData(final List<String> dataFiles) throws IOException {
-        Map<String, List<Map<String, String>>> data = null;
-        Map<String, List<Map<String, String>>> finalData = new HashMap<String, List<Map<String, String>>>();
+    private Map<String, List<Map<String, Object>>> LoadCSVData(final List<String> dataFiles) throws IOException {
+        Map<String, List<Map<String, Object>>> data = null;
+        Map<String, List<Map<String, Object>>> finalData = new HashMap<String, List<Map<String, Object>>>();
         for (String filePath : dataFiles) {
             try {                             
                 ResourceLoader resource = new ResourceLoader(filePath);               
@@ -121,15 +121,15 @@ public class CustomCSVDataLoader implements Loader{
      * @return a map of data
      * @throws IOException if an IO exception occurs
      */
-    private static Map<String, List<Map<String, String>>> loadFromSpreadsheet(final InputStream csvFile) throws IOException {
-        Map<String, List<Map<String, String>>> data = new HashMap<String, List<Map<String,String>>>();
+    private static Map<String, List<Map<String, Object>>> loadFromSpreadsheet(final InputStream csvFile) throws IOException {
+        Map<String, List<Map<String, Object>>> data = new HashMap<String, List<Map<String,Object>>>();
         CsvReader csvReader = new CsvReader(new InputStreamReader(csvFile), COMMA_SEPARATOR);
         Boolean isKeyRow = true;
-        List<Map<String, String>> dataValues = null;
+        List<Map<String, Object>> dataValues = null;
         Map<Integer, String> tempData = new HashMap<Integer, String>();
-        data = new HashMap<String, List<Map<String, String>>>();
+        data = new HashMap<String, List<Map<String, Object>>>();
         while (csvReader.readRecord()) {
-            Map<String, String> actualData = new HashMap<String, String>();
+            Map<String, Object> actualData = new HashMap<String, Object>();
             String[] splitValues =csvReader.getValues();
             if (splitValues.length > 0 && splitValues[0].isEmpty()) {
                 isKeyRow = false;
@@ -137,7 +137,7 @@ public class CustomCSVDataLoader implements Loader{
                 isKeyRow = true;
             }
             if (isKeyRow) {
-                dataValues = new ArrayList<Map<String, String>>();
+                dataValues = new ArrayList<Map<String, Object>>();
                 for (int i = 0; i < splitValues.length; i++) {
                     tempData.put(i, splitValues[i]);
                 }
@@ -162,9 +162,9 @@ public class CustomCSVDataLoader implements Loader{
      * @return the data
      */
     @Override
-    public Map<String, List<Map<String, String>>> loadData(String[] filePaths) {
+    public Map<String, List<Map<String, Object>>> loadData(String[] filePaths) {
         System.out.println("Using my custom Loader");
-        Map<String, List<Map<String, String>>> result = new HashMap<String, List<Map<String,String>>>();
+        Map<String, List<Map<String, Object>>> result = new HashMap<String, List<Map<String,Object>>>();
         try {
             result = LoadCSVData(Arrays.asList(filePaths));
         } catch (IOException e) {

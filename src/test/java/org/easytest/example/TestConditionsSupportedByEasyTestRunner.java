@@ -1,35 +1,18 @@
 
 package org.easytest.example;
 
-import org.easytest.loader.FileType;
-
-import org.easytest.converter.ConverterManager;
-
-import org.easytest.annotation.CustomLoader;
-import org.easytest.annotation.Param;
-import org.easytest.annotation.TestData;
-
-import org.easytest.runner.EasyTestRunner;
-
-import org.easytest.example.editors.LibraryIdEditor;
-
-
-
-
-
 import java.beans.PropertyEditorManager;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import junit.framework.Assert;
+import org.easytest.annotation.DataLoader;
+import org.easytest.annotation.Param;
+import org.easytest.converter.ConverterManager;
+import org.easytest.example.editors.LibraryIdEditor;
+import org.easytest.loader.LoaderType;
+import org.easytest.runner.EasyTestRunner;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.theories.ParameterSignature;
-import org.junit.experimental.theories.ParameterSupplier;
-import org.junit.experimental.theories.ParametersSuppliedBy;
-import org.junit.experimental.theories.PotentialAssignment;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
@@ -40,7 +23,7 @@ import org.junit.runner.RunWith;
  *
  */
 @RunWith(EasyTestRunner.class)
-@TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
+@DataLoader(filePaths = { "getItemsData.csv" }, loaderType = LoaderType.CSV)
 public class TestConditionsSupportedByEasyTestRunner {
     
     /**
@@ -86,12 +69,7 @@ public class TestConditionsSupportedByEasyTestRunner {
     }
     
     /**
-     * Test case that uses {@link TestData} annotation with the available attribute : filepaths only.
-     * The CSV file in this case is present in the src/test/resources folder
-     * @param id a strongly typed, user defined Object that has its editor present in the same package as the Object.
-     * So in this case LibraryId and LibraryIdEditor are present in the same package : org.example
-     * And same is the case for ItemId and ItemIdEditor.
-     * @param itemId same as above
+     * Test with Strong Parameters
      * 
      */
     @Test
@@ -109,29 +87,16 @@ public class TestConditionsSupportedByEasyTestRunner {
     }
     
     /**
-     * Test case showing the use of {@link CustomLoader} annotation.
+     * Test case showing the use of {@link DataLoader} annotation.
      * This example can also be used as a test to using PropertyEditors 
      * that are registered by the test class itself.
      * @param inputData
      */
     @Test
-    @TestData(filePaths = { "getItemsDataCustom.csv" }, fileType = FileType.CUSTOM)
-    @CustomLoader(loader = CustomCSVDataLoader.class)
+    @DataLoader(loader = CustomObjectDataLoader.class)
     public void testGetItemsWithCustomLoader(@Param()
-    Map<String, String> inputData) {
-        System.out.println("library Id : " + inputData.get("LibraryId") + " and item type : "
-            + inputData.get("itemType") + " and search text array :" + inputData.get("searchText"));
-
-    }
-    
-    /**
-     * Test case that does not use {@link TestData} annotation to get the test data. Instead it provides its own DatSupplier
-     * @param inputData  a generic map of input test data that contains all the required parameters for the test data.
-     */
-    @Test
-    public void testGetItemsWithoutTestData(@ParametersSuppliedBy(GetItemsDataSupplier.class)HashMap<String, Object> inputData) {
-        System.out.println("library Id : " + inputData.get("LibraryId") + " and item type : "
-            + inputData.get("itemType") + " and search text array :" + inputData.get("searchText"));
+    Map<String, Object> inputData) {
+        System.out.println("library Id : " + inputData.get("LibraryId"));
 
     }
     
@@ -145,32 +110,4 @@ public class TestConditionsSupportedByEasyTestRunner {
         System.out.println(item.getDescription() + item.getItemId() + item.getItemType());
         
     }
-    
-    /**
-     * 
-     * A static {@link ParameterSupplier} class for providing data to testGetItemsWithoutTestData method
-     *
-     */
-    public static class GetItemsDataSupplier extends ParameterSupplier {
-        
-                @Override
-                public List<PotentialAssignment> getValueSources(ParameterSignature sig) {
-                    List<PotentialAssignment> list = new ArrayList<PotentialAssignment>();
-                    HashMap<String, Object> inputData = new HashMap<String, Object>();
-                    inputData.put("LibraryId", new LibraryId(1L));
-                    inputData.put("itemType", "ebook");
-                    inputData.put("searchText", new String[]{"potter" , "poppins" , "superman"});
-                    list.add(PotentialAssignment.forValue("", inputData));
-                    HashMap<String, Object> inputData1 = new HashMap<String, Object>();
-                    inputData1.put("LibraryId", new LibraryId(1L));
-                    inputData1.put("itemType", "book");
-                    inputData1.put("searchText", new String[]{"spiderman"});
-                    list.add(PotentialAssignment.forValue("", inputData1));
-                    return list;
-                }
-                
-            }
-        
-    
-
 }
