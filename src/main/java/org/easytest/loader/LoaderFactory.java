@@ -15,14 +15,14 @@ public class LoaderFactory {
      * @param fileType the type of file
      * @return an instance of {@link Loader} or null if no loader is found.
      */
-    public static Loader getLoader(FileType fileType){
+    public static Loader getLoader(LoaderType fileType){
         Loader loader = null;
-        if(FileType.CSV.equals(fileType)){
+        if(LoaderType.CSV.equals(fileType)){
             loader = new CSVDataLoader();
         }else{
             Assert.fail("The framework currently does not support the specified Loader type. " +
-                "You can provide the custom Loader by choosing FileType.CUSTOM in TestData " +
-                "annotation and providing your custom loader using CustomLoader annotation." );
+                "You can provide the custom Loader by choosing LoaderType.CUSTOM in TestData " +
+                "annotation and providing your custom loader using DataLoader annotation." );
         }
         return loader;
     }

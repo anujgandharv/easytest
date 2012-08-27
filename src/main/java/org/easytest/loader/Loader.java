@@ -20,6 +20,6 @@ public interface Loader {
      * This is currently not a user friendly way of exposing the test data. 
      * TODO:This may change in future to something thats easier for the users to follow and supply.
      */
-    Map<String, List<Map<String, String>>> loadData(String[] filePaths);
+    Map<String, List<Map<String, Object>>> loadData(String[] filePaths);
 
 }

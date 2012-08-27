@@ -21,6 +21,6 @@ public interface Converter<Type> {
      * @param convertFrom the {@link Map} to convert from
      * @return the object to convert to identified by {@link #convertTo()} class.
      */
-    Type convert(Map<String , String> convertFrom);
+    Type convert(Map<String , Object> convertFrom);
 
 }
