@@ -36,9 +36,9 @@ This code base consists of :
 1) A customized JUnit Runner(extending BlockJUnit4Runner) that provides the test data in a consistent and user controlled manner. It is called EasyTestRunner. 
 This Runner works on our favorite annotation @Test from JUnit and also supports passing parameters to the test method. And this is not its only selling point.
 
-2) A Data Loading Strategy consisting of interface Loader and classes LoaderFactory and CSVDataLoader and an Enum FileType. 
+2) A Data Loading Strategy consisting of interface Loader and classes LoaderFactory and CSVDataLoader and an Enum loaderType. 
 CSVDataLoader is an implementation of Loader interface and provides a mechanism to load test data from a CSV file.
-LoaderFactory is a Factory class that is responsible for returning the right type of Loader based on the FileType.
+LoaderFactory is a Factory class that is responsible for returning the right type of Loader based on the loaderType.
 
 3) Param annotation that is an extension of ParametersSuppliedBy annotation and provides a lot of useful features to its user. Some of them include:
  + A mechanism to provide custom Objects to the test method. For eg. if a test method requires a user defined object LibraryId, then the Param annotation 
@@ -49,24 +49,27 @@ LoaderFactory is a Factory class that is responsible for returning the right typ
  A user can provide its own implementation of converting a Map (containing the key value pair) to an object that is expected by the test method and the extension framework will take care of the rest.
  See <B>CASE 4 </B>below 
 
-4) TestData annotation to be used by the user in the test to provide information about the test data like:
-   + The list of files from which to load the input test data. This is a MANDATORY field whose type is a String[]</li>
+4) DataLoader annotation to be used by the user in the test to provide information about the test data like:
+   + The list of files from which to load the input test data. This is a OPTIONAL field whose type is a String[]</li>
    
-   + The type of File that contains the data, identified by FileType.</li>
+   + The type of loader to load the files, identified by loaderType.</li>
+   + The custom loader that is used by users to provide custom data loaders. It is an OPTIONAL field. 
  
     
-   Currently the framework only support CSV file Type and in case the Framework does not support the specified file Type the test execution will fail.
-   For the moment the annotation can only be applied at method level. 
+   Currently the framework only support CSV loader Type and in case the Framework does not support the specified loader Type the test execution will fail.
+   The annotation can be applied both at the Class level as well as at the method level. In case the annotation is applied at both places, then method level takes precedence over Class level.
    
 5)DataContext class that contains thread-local variables that stores test data as well as the name of the currently executing test method.
 
+6)Finally, EasyTest also supports DataPoint, DataPoints and ParameterSuppliedBy annotations as well.
 
-Some Examples of using the EasyTest
+
+Some Examples of using EasyTest
 ---------------------------------------------------
 <B>CASE 1</B>: Provides input test data in the form of CSV file at the class level, that is used by the test methods.
 
     @RunWith(EasyTestRunner.class)
-    @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
+    @DataLoader(filePaths = { "getItemsData.csv" }, loaderType = LoaderType.CSV)
     public class TestConditionsSupportedByEasyTestRunner {
 
 
@@ -93,7 +96,7 @@ Some Examples of using the EasyTest
      * @param inputData a generic map of input test data that contains all the required parameters for the test data.
      */
     @Test
-    @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
+    @DataLoader(filePaths = { "getItemsData.csv" }, loaderType = LoaderType.CSV)
     public void testGetItems(@Param()
     Map<String, String> inputData) {
         System.out.println("library Id : " + inputData.get("LibraryId") + " and item type : "
@@ -104,7 +107,7 @@ Some Examples of using the EasyTest
 <B>CASE 3</B>: User provides input test data in the form of CSV file at the Class level as well as method level. In this case method level test data takes priority over class level test data.
 
     @RunWith(EasyTestRunner.class)
-    @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
+    @DataLoader(filePaths = { "getItemsData.csv" }, loaderType = LoaderType.CSV)
     public class TestConditionsSupportedByEasyTestRunner {
 
 
@@ -113,7 +116,7 @@ Some Examples of using the EasyTest
      * @param inputData a generic map of input test data that contains all the required parameters for the test data.
      */
     @Test
-    @TestData(filePaths = { "getCustomData.csv" }, fileType = FileType.CSV)
+    @DataLoader(filePaths = { "getCustomData.csv" }, loaderType = LoaderType.CSV)
     public void testGetItems(@Param()
     Map<String, String> inputData) {
         System.out.println("library Id : " + inputData.get("LibraryId") + " and item type : "
@@ -121,10 +124,10 @@ Some Examples of using the EasyTest
 
     }
 
-<B>CASE 4</B>: User can also provide its custom Data Loader both at the Class level as well as at the method level. The below example shows using CustomLoader at the method level :
+<B>CASE 4</B>: User can also provide its custom Data Loader both at the Class level as well as at the method level. The below example shows using Custom Loader at the method level :
 
     @RunWith(EasyTestRunner.class)
-    @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
+    @DataLoader(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
     public class TestConditionsSupportedByEasyTestRunner {
 
 
@@ -133,7 +136,7 @@ Some Examples of using the EasyTest
      * @param inputData a generic map of input test data that contains all the required parameters for the test data.
      */
     @Test
-    @TestData(filePaths = { "getCustomData.csv" }, fileType = FileType.CUSTOM)
+    @DataLoader(loader = MyDataLoader.class, loaderType = LoaderType.CUSTOM)
     @CustomLoader(loader = MyDataLoader.class)
     public void testGetItems(@Param()
     Map<String, String> inputData) {
@@ -145,7 +148,7 @@ Some Examples of using the EasyTest
 <B>CASE 5</B>: User can also use their custom defined Objects as parameters in the test case. In this case LibraryId and ItenmId will be resolved using RegsitryEditorSupport of java:
 
     @RunWith(EasyTestRunner.class)
-    @TestData(filePaths = { "getItemsData.csv" }, fileType = FileType.CSV)
+    @DataLoader(filePaths = { "getItemsData.csv" }, loaderType = LoaderType.CSV)
     public class TestConditionsSupportedByEasyTestRunner {
 
 
@@ -154,8 +157,7 @@ Some Examples of using the EasyTest
      * @param inputData a generic map of input test data that contains all the required parameters for the test data.
      */
     @Test
-    @TestData(filePaths = { "getCustomData.csv" }, fileType = FileType.CUSTOM)
-    @CustomLoader(loader = MyDataLoader.class)
+    @DataLoader(loader = MyDataLoader.class, loaderType = LoaderType.CUSTOM)
     public void testGetItems(@Param()
     LibraryId id , @Param(name="itemid") ItemId itemId) {
         System.out.println("library Id : " + id.getValue() + " and item type : "
@@ -169,14 +171,15 @@ Some Examples of using the EasyTest
 <B>CASE 6</B>: User can also use their custom defined objects when RegistryEditor support is not enough. The user simply has to either extend AbstractConverter class or implement the Converter interface and register it with the framework using ConverterManager class.
 
     @Test
-    @TestData(filePaths = { "getItemsData.csv" })
+    @DataLoader(filePaths = { "getItemsData.csv" })
     public void testConverter(@Param() Item item){
         Assert.assertNotNull(item);
         System.out.println(item.getDescription() + item.getItemId() + item.getItemType());
         
     }
     
-    And the framework supports much much more. Look at the Getting Started Guide for more information.
+    And the framework supports much much more like DataPOint, DataPOints, ParameterSuppliedBy etc. Look at the Getting Started Guide for more information.
+    
 Conclusion
 -----------
 This extension to JUnit focuses on bringing back the simplicity back to JUnit in JUnit way.
