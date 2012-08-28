@@ -15,7 +15,7 @@ public class EmptyLoader implements Loader {
     /**
      * Return an empty map
      * @param filePaths
-     * @return
+     * @return the data to be consumed by the framework
      */
     @Override
     public Map<String, List<Map<String, Object>>> loadData(String[] filePaths) {
