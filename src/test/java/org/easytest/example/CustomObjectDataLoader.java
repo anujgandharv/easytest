@@ -1,4 +1,3 @@
-
 package org.easytest.example;
 
 import java.util.ArrayList;
@@ -17,7 +16,7 @@ import org.easytest.loader.Loader;
  */
 public class CustomObjectDataLoader implements Loader {
 
-    @Override
+    //@Override - Commented by Ravi for issue # 4 on 29-Aug-12
     public Map<String, List<Map<String, Object>>> loadData(String[] filePaths) {
         Map<String, List<Map<String, Object>>> result = new HashMap<String, List<Map<String, Object>>>();
         List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
