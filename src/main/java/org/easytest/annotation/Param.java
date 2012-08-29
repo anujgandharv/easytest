@@ -142,7 +142,8 @@ public @interface Param {
             PropertyEditor editor = PropertyEditorManager.findEditor(idClass);
             if (editor != null) {
                 for (Map<String, Object> object : convertFrom) {
-                    if (paramName != null && !paramName.isEmpty()) {
+                    if (paramName != null && !"".equals(paramName)) { 
+                        //paramName.isEmpty() method is replaced for JDK 1.5 compatibility
                         if(getStringValue(paramName, object) != null){
                             editor.setAsText(getStringValue(paramName, object));
                             object.remove(paramName);
