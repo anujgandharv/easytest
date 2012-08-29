@@ -7,7 +7,7 @@ import java.util.Map;
 public class ItemConverter extends AbstractConverter<Item> {
 
 
-    //@Override - Commented by Ravi for issue # 4 on 29-Aug-12
+    @Override
     public Item convert(Map<String, Object> convertFrom) {
         Item item = null;
         
