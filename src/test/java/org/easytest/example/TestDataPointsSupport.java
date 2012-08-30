@@ -1,4 +1,4 @@
-package org.easetech.easytest.example;
+package org.easytest.example;
 
 import org.junit.experimental.theories.ParametersSuppliedBy;
 

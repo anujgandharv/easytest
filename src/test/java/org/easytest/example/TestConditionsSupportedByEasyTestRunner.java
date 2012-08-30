@@ -1,11 +1,12 @@
 
-package org.easetech.easytest.example;
+package org.easytest.example;
+
+import org.easytest.example.editors.LibraryIdEditor;
 
 import java.beans.PropertyEditorManager;
 import java.util.Map;
 import junit.framework.Assert;
 
-import org.easetech.easytest.example.editors.LibraryIdEditor;
 import org.easytest.annotation.DataLoader;
 import org.easytest.annotation.Param;
 import org.easytest.converter.ConverterManager;

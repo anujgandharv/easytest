@@ -1,5 +1,5 @@
 
-package org.easetech.easytest.example;
+package org.easytest.example;
 
 import java.util.ArrayList;
 

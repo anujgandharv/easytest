@@ -1,6 +1,6 @@
-package org.easetech.easytest.example.editors;
+package org.easytest.example.editors;
 
-import org.easetech.easytest.example.LibraryId;
+import org.easytest.example.LibraryId;
 
 import java.beans.PropertyEditor;
 
