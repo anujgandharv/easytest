@@ -137,7 +137,7 @@ public @interface Param {
          * @param convertFrom the list of raw data read from the CSV file.
          * @return list of {@link PotentialAssignment}
          */
-        private List<PotentialAssignment> convert(Class idClass, String paramName, List<Map<String, Object>> convertFrom) {
+        private List<PotentialAssignment> convert(Class<?> idClass, String paramName, List<Map<String, Object>> convertFrom) {
             List<PotentialAssignment> finalData = new ArrayList<PotentialAssignment>();
             PropertyEditor editor = PropertyEditorManager.findEditor(idClass);
             if (editor != null) {
