@@ -1,7 +1,7 @@
-package org.easytest.loader;
+package org.easetech.easytest.loader;
 
-import org.easytest.util.DataContext;
-import org.easytest.util.ResourceLoader;
+import org.easetech.easytest.util.DataContext;
+import org.easetech.easytest.util.ResourceLoader;
 
 import com.csvreader.CsvReader;
 import java.io.FileNotFoundException;

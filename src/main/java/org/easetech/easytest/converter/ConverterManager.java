@@ -1,5 +1,5 @@
 
-package org.easytest.converter;
+package org.easetech.easytest.converter;
 
 
 import java.util.HashSet;

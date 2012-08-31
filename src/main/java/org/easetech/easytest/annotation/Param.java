@@ -1,12 +1,12 @@
-package org.easytest.annotation;
+package org.easetech.easytest.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
-import org.easytest.util.DataContext;
+import org.easetech.easytest.converter.Converter;
+import org.easetech.easytest.converter.ConverterManager;
+import org.easetech.easytest.util.DataContext;
 
-import org.easytest.converter.Converter;
-import org.easytest.converter.ConverterManager;
 
 
 
