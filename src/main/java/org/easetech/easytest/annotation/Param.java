@@ -99,7 +99,7 @@ public @interface Param {
                 		"In case you are using ParametersSuppliedBy annotation, make sure you are using the right ParameterSupplier subclass.");
             }
             List<PotentialAssignment> listOfData = null;
-            Map<String, List<Map<String, Object>>> data = DataContext.getData();
+            Map<String, List<Map<String, Object>>> data = DataContext.getConvertedData();
             List<Map<String, Object>> methodData = data.get(value);
             if(methodData == null){
                 Assert.fail("Data does not exist for the specified method with name :" + value + " .Please check " +
