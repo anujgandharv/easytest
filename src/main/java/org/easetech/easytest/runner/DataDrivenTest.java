@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
  * This gives user the clear picture of which test was run with which input test data.
  * 
  * For details on the actual Runner implementation, see {@link EasyTestRunner}
+ * 
+ * @author Anuj Kumar
  *
  */
 public class DataDrivenTest extends Suite {
