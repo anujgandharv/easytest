@@ -39,14 +39,15 @@ This Runner works on our favorite annotation @Test from JUnit and also supports 
 2) DataDrivenTest runner gives its users the ability to inspect the testMethod and its associated test data in the IDE. 
 For example, when a user runs the test method with name : getTestData with the following test data:
 
- "libraryId=1 and itemId=2"
+<B> + "libraryId=1 and itemId=2"</B>
  
- "libraryId=2456 and itemId=789"
+ <B> + "libraryId=2456 and itemId=789"</B>
  
  then, DataDrivenTest, will provide the details of the executing test method in the JUnit supported IDEs like this: 
  
- getTestData{libraryId=1 ,itemId=2}
- getTestData{libraryId=2456 ,itemId=789}
+ <B>+ getTestData{libraryId=1 ,itemId=2}
+ 
+  + getTestData{libraryId=2456 ,itemId=789}</B>
  
  NOTE: In case the user has simple test methods(without parameters), DataDrivenTest runner supports that implicitly.
  
