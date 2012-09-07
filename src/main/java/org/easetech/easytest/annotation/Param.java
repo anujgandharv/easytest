@@ -145,12 +145,12 @@ public @interface Param {
                     if (paramName != null && !"".equals(paramName)) {
                         if(getStringValue(paramName, object) != null){
                             editor.setAsText(getStringValue(paramName, object));
-                            object.remove(paramName);
+                            //object.remove(paramName);
                         }
                         
                     } else {
                         editor.setAsText(getStringValue(idClass.getSimpleName(), object));
-                        object.remove(idClass.getSimpleName());
+                        //object.remove(idClass.getSimpleName());
                     }
                     if (editor.getValue() != null) {
                         finalData.add(PotentialAssignment.forValue("", editor.getValue()));
