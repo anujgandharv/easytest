@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,15 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class DataDrivenTest extends Suite {
-
+    
+	//creating following variables for capturing test output
+    private String[] dataFiles;
+    private Loader dataLoader = null;
+    private static Map<String, List<Map<String, Object>>> actualData;
+    private static int rowNum = 0;
+    private String mapMethodName = "";
+    private boolean actualDataLoadedOnce = false;
+    
     /**
      * An instance of logger associated with the test framework.
      */
@@ -230,11 +239,12 @@ public class DataDrivenTest extends Suite {
          */
         @Override
         protected void validateTestMethods(List<Throwable> errors) {
-            for (FrameworkMethod each : computeTestMethods())
-                if (each.getAnnotation(Test.class) != null)
+            for (FrameworkMethod each : computeTestMethods()) {
+/*                if (each.getAnnotation(Test.class) != null)
                     each.validatePublicVoid(false, errors);
                 else
-                    each.validatePublicVoidNoArg(false, errors);
+                    each.validatePublicVoidNoArg(false, errors);*/
+            }
         }
 
         /**
@@ -324,7 +334,7 @@ public class DataDrivenTest extends Suite {
             @Override
             public void evaluate() throws Throwable {
                 runWithAssignment(Assignments.allUnassigned(fTestMethod.getMethod(), getTestClass()));
-
+                System.out.println("ParamAnchor evaluate");
                 if (successes == 0)
                     Assert.fail("Never found parameters that satisfied method assumptions.  Violated assumptions: "
                         + fInvalidParameters);
@@ -428,7 +438,28 @@ public class DataDrivenTest extends Suite {
                     public void evaluate() throws Throwable {
                         try {
                             final Object[] values = complete.getMethodArguments(true);
-                            method.invokeExplosively(freshInstance, values);
+                            Object returnObj = method.invokeExplosively(freshInstance, values);
+                            if(returnObj!=null){
+                            	System.out.println("returnObj:"+returnObj);
+                            	if(!mapMethodName.equals(method.getMethod().getName())){
+                            		mapMethodName = method.getMethod().getName();                            		
+                            		rowNum = 0;
+                            	}
+                            	System.out.println("mapMethodName:"+mapMethodName+" ,rowNum:"+rowNum);
+                            	//List<Map<String,Object>> methodData = data.get(mapMethodName);
+                            	//Map<String,Object> returnObjMap = new HashMap<String,Object>();
+                            	//returnObjMap.put("ActualResult",returnObj);
+                            	//actualData = DataContext.getData();
+                            	if(actualData.get(mapMethodName) != null){
+                            		System.out.println("actualData.get(mapMethodName)"+actualData.get(mapMethodName)+" ,rowNum:"+rowNum);
+                            		//List<Map<String,Object>> methoData = DataContext.getData().get(method.getName());
+                            		//if(DataContext.getData().get(method.getName())!=null){
+                            		actualData.get(mapMethodName).get(rowNum++).put("ActualResult",returnObj);
+                            		//}
+                            	}
+                            	System.out.println("writeMap:"+actualData.toString());
+                            	dataLoader.writeData(dataFiles[0], actualData);
+                            }
                         } catch (CouldNotGenerateValueException e) {
                             // ignore
                         }
@@ -492,11 +523,12 @@ public class DataDrivenTest extends Suite {
          */
         @Override
         protected void validateTestMethods(List<Throwable> errors) {
-            for (FrameworkMethod each : computeTestMethods())
-                if (each.getAnnotation(Test.class) != null)
+            for (FrameworkMethod each : computeTestMethods()) {
+                /*if (each.getAnnotation(Test.class) != null)
                     each.validatePublicVoid(false, errors);
                 else
-                    each.validatePublicVoidNoArg(false, errors);
+                    each.validatePublicVoidNoArg(false, errors);*/
+            }
         }
 
         /**
@@ -677,9 +709,11 @@ public class DataDrivenTest extends Suite {
             testData = method.getAnnotation(DataLoader.class);
         }
         if (testData != null) {
-            String[] dataFiles = testData.filePaths();
+            //String[] dataFiles = testData.filePaths();
+            dataFiles = testData.filePaths();
             LoaderType loaderType = testData.loaderType();
-            Loader dataLoader = null;
+            //Loader 
+            dataLoader = null;
             if (LoaderType.CUSTOM.equals(loaderType)) {
                 PARAM_LOG.info("User specified to use custom Loader. Trying to get the custom loader.");
                 if (testData.loader() == null) {
@@ -722,6 +756,13 @@ public class DataDrivenTest extends Suite {
                     + "annotation and providing your custom loader using @DataLoader annotation.");
             } else {
                 Map<String, List<Map<String, Object>>> data = dataLoader.loadData(dataFiles);
+            	if(!actualDataLoadedOnce){
+            		actualData = new HashMap<String, List<Map<String, Object>>>();
+            		for(String key:data.keySet()){
+            			actualData.put(key, data.get(key));
+            		}
+            		actualDataLoadedOnce = true;
+            	}
                 DataContext.setData(DataConverter.appendClassName(data, currentTestClass));
                 DataContext.setConvertedData(DataConverter.convert(data, currentTestClass));
 
