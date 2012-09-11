@@ -1,4 +1,3 @@
-
 package org.easetech.easytest.runner;
 
 import java.lang.reflect.Field;
@@ -334,7 +333,7 @@ public class DataDrivenTest extends Suite {
             @Override
             public void evaluate() throws Throwable {
                 runWithAssignment(Assignments.allUnassigned(fTestMethod.getMethod(), getTestClass()));
-                System.out.println("ParamAnchor evaluate");
+                LOG.debug("ParamAnchor evaluate");
                 if (successes == 0)
                     Assert.fail("Never found parameters that satisfied method assumptions.  Violated assumptions: "
                         + fInvalidParameters);
@@ -440,24 +439,24 @@ public class DataDrivenTest extends Suite {
                             final Object[] values = complete.getMethodArguments(true);
                             Object returnObj = method.invokeExplosively(freshInstance, values);
                             if(returnObj!=null){
-                            	System.out.println("returnObj:"+returnObj);
+                            	LOG.debug("returnObj:"+returnObj);
                             	if(!mapMethodName.equals(method.getMethod().getName())){
                             		mapMethodName = method.getMethod().getName();                            		
                             		rowNum = 0;
                             	}
-                            	System.out.println("mapMethodName:"+mapMethodName+" ,rowNum:"+rowNum);
+                            	LOG.debug("mapMethodName:"+mapMethodName+" ,rowNum:"+rowNum);
                             	//List<Map<String,Object>> methodData = data.get(mapMethodName);
                             	//Map<String,Object> returnObjMap = new HashMap<String,Object>();
                             	//returnObjMap.put("ActualResult",returnObj);
                             	//actualData = DataContext.getData();
                             	if(actualData.get(mapMethodName) != null){
-                            		System.out.println("actualData.get(mapMethodName)"+actualData.get(mapMethodName)+" ,rowNum:"+rowNum);
+                            		LOG.debug("actualData.get(mapMethodName)"+actualData.get(mapMethodName)+" ,rowNum:"+rowNum);
                             		//List<Map<String,Object>> methoData = DataContext.getData().get(method.getName());
                             		//if(DataContext.getData().get(method.getName())!=null){
                             		actualData.get(mapMethodName).get(rowNum++).put("ActualResult",returnObj);
                             		//}
                             	}
-                            	System.out.println("writeMap:"+actualData.toString());
+                            	LOG.debug("writeMap:"+actualData.toString());
                             	dataLoader.writeData(dataFiles[0], actualData);
                             }
                         } catch (CouldNotGenerateValueException e) {
