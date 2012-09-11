@@ -9,7 +9,11 @@ import org.junit.runner.RunWith;
 @RunWith(org.easetech.easytest.runner.DataDrivenTest.class)
 @DataLoader(filePaths={"testExcelData.xls"} , loaderType=LoaderType.EXCEL)
 public class TestExcelDataLoader {
-
+	
+	  /**
+     * An instance of logger associated with the test framework.
+     */
+    protected static final Logger LOG = LoggerFactory.getLogger(TestExcelDataLoader.class);
 	
 	@Test
 	public void getExcelTestData(@Param(name="libraryId") Float libraryId , @Param(name="itemId") Float itemId ){
@@ -42,11 +46,11 @@ public class TestExcelDataLoader {
 	@Test
 	@DataLoader(filePaths={"testExcelData.xls"} , loaderType=LoaderType.EXCEL)
 	public Item getExcelTestDataWithReturnType(@Param(name="libraryId") Float libraryId , @Param(name="itemId") Float itemId){
-	    System.out.print("Executing  getExcelTestDataWithReturnType : ");
-		System.out.println("LibraryId is :" + libraryId + " and Item Id is :" + itemId);
+	    LOG.debug("Executing  getExcelTestDataWithReturnType : ");
+		LOG.debug("LibraryId is :" + libraryId + " and Item Id is :" + itemId);
 		ItemService itemService = new RealItemService();
 	        Item item = itemService.findItem(new LibraryId(Long.valueOf(libraryId.longValue())), new ItemId(Long.valueOf(itemId.longValue())));
-	        System.out.println("return item: " + item.toString()); 
+	        LOG.debug("return item: " + item.toString()); 
 	        return item;
 	}
 
