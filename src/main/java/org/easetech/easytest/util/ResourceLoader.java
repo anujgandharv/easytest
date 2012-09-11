@@ -11,7 +11,11 @@ import java.io.InputStream;
  * 
  */
 public class ResourceLoader {
-
+    
+    /**
+     * An instance of logger associated with the test framework.
+     */
+    protected static final Logger LOG = LoggerFactory.getLogger(ResourceLoader.class);
     /**
      * The path to the file that needs to be loaded
      */
@@ -59,7 +63,7 @@ public class ResourceLoader {
             classLoader = Thread.currentThread().getContextClassLoader();
         }
         String path = classLoader.getResource(this.filePath).getPath();
-        System.out.println("getInputStream() File absolute path:"+path); 
+        LOG.debug("getInputStream() File absolute path:"+path); 
         
         if (path == null) {
             throw new FileNotFoundException(filePath + " cannot be opened because it does not exist");
@@ -81,7 +85,7 @@ public class ResourceLoader {
             classLoader = Thread.currentThread().getContextClassLoader();
         }
         String path = classLoader.getResource(this.filePath).getPath();
-        System.out.println("getFileOutputStream File absolute path:"+path);        
+        LOG.debug("getFileOutputStream File absolute path:"+path);        
         if (path == null) {
             throw new FileNotFoundException(filePath + " cannot be opened because it does not exist");
         }
