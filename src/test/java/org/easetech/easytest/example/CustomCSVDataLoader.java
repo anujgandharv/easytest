@@ -80,8 +80,6 @@ public class CustomCSVDataLoader implements Loader{
             data = loadFromSpreadsheet(stream);
             finalData.putAll(data);
         }
-        
-        DataContext.setData(finalData);
 
     }
 
@@ -172,5 +170,12 @@ public class CustomCSVDataLoader implements Loader{
         }
         return result;
     }
+    
+    @Override
+	public void writeData(String filePath,
+			Map<String, List<Map<String, Object>>> actualData) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

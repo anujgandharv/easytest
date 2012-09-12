@@ -12,12 +12,12 @@
     <!-- The project details. -->
     <groupId>org.easetech</groupId>
     <artifactId>easytest</artifactId>
-	<packaging>jar</packaging>
-	<name>EasyTest to ease Data Driven Testing</name>
-	<description>EasyTest is a JUnit extension perform Data Driven Testing with ease and simplicity. 
+ <packaging>jar</packaging>
+ <name>EasyTest to ease Data Driven Testing</name>
+ <description>EasyTest is a JUnit extension perform Data Driven Testing with ease and simplicity. 
     It supports method parameters with Test annotation and much more.</description>
     <url>https://github.com/EaseTech/easytest</url>
-	<version>0.5.0</version>
+ <version>0.5.0</version>
  
     <developers>
        <developer>
@@ -102,7 +102,7 @@
 
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api-jdk15</artifactId>
+            <artifactId>slf4j-api</artifactId>
             <version>1.6.1</version>
             <scope>compile</scope>
         </dependency>
@@ -112,6 +112,24 @@
             <artifactId>log4j</artifactId>
             <version>1.2.15</version>
             <scope>runtime</scope>
+            <exclusions>
+    		    <exclusion>
+			      <groupId>javax.mail</groupId>
+			      <artifactId>mail</artifactId>
+			    </exclusion>
+			    <exclusion>
+			      <groupId>javax.jms</groupId>
+			      <artifactId>jms</artifactId>
+			    </exclusion>
+			    <exclusion>
+			      <groupId>com.sun.jdmk</groupId>
+			      <artifactId>jmxtools</artifactId>
+			    </exclusion>
+			    <exclusion>
+			      <groupId>com.sun.jmx</groupId>
+			      <artifactId>jmxri</artifactId>
+			    </exclusion>
+			 </exclusions>
         </dependency>
 
         <dependency>
@@ -136,12 +154,12 @@
         </dependency>
         
         <dependency>
-	    	<groupId>cglib</groupId>
-	    	<artifactId>cglib</artifactId>
-	    	<version>2.2.2</version>
-		</dependency>
-	
-		<dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+ 
+        <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
             <version>3.8</version>
