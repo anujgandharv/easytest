@@ -14,7 +14,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 /**
- * TODO Describe me
+ * An extension of {@link RunAfters} method to write 
+ * the test data to the file at the end of executing all the test methods in the test cases.
  * 
  */
 public class RunAftersWithOutputData extends RunAfters {
