@@ -45,9 +45,9 @@
   </repository>
  </distributionManagement>
  <scm>
-  <connection>scm:git:git@github.com:easetech/easytest.git</connection>
-  <developerConnection>scm:git:git@github.com:easetech/easytest</developerConnection>
-  <url>https://github.com:easetech/easytest.git</url>
+  <connection>scm:git:git@github.com:EaseTech/easytest.git</connection>
+  <developerConnection>scm:git:git@github.com:EaseTech/easytest.git</developerConnection>
+  <url>scm:git:git@github.com:EaseTech/easytest.git</url>
  </scm>
 
  <build>
