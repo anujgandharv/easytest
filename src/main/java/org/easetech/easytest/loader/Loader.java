@@ -12,6 +12,10 @@ import java.util.Map;
  *
  */
 public interface Loader {
+    /**
+     * The key identifying the actual output result that needs to be written to the file.
+     */
+    String ACTUAL_RESULT = "ActualResult";
     
     /**
      * Method responsible to Load the test data from the list of files passed as parameter
