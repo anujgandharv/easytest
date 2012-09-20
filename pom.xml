@@ -38,6 +38,11 @@
   <system>GitHub</system>
   <url>https://github.com/EaseTech/easytest/issues</url>
  </issueManagement>
+ <distributionManagement>
+  <repository>
+   <url>https://github.com/EaseTech/easytest</url>
+  </repository>
+ </distributionManagement>
  <scm>
   <connection>scm:git:git://github.com/EaseTech/easytest.git</connection>
   <developerConnection>scm:git:https://github.com/EaseTech/easytest</developerConnection>
@@ -110,7 +115,7 @@
      <execution>
       <id>default</id>
       <goals>
-       <goal>perform</goal>
+       <goal>prepare</goal>
       </goals>
       <configuration>
        <pomFileName>
