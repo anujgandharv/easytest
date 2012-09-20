@@ -41,7 +41,7 @@
  <distributionManagement>
   <repository>
   <id>EasyTest</id>
-   <url>https://github.com:EaseTech/easytest</url>
+   <url>https://github.com/EaseTech/easytest.git</url>
   </repository>
  </distributionManagement>
  <scm>
