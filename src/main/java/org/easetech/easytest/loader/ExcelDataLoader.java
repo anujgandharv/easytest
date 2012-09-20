@@ -284,12 +284,13 @@ public class ExcelDataLoader implements Loader {
         return result;
     }
 
+    /**
+     * Write the data back to the Excel file. The data is written to the same Excel File as it was read from.
+     * @param filePath the path of the file specifying the the file to which data needs to be written.
+     * @param map an instance of {@link Map} containing the data that needs to be written to the file.
+     */
     @Override
     public void writeData(String filePath, Map<String, List<Map<String, Object>>> map) {
-        // filePath = OUTPUT_FILE_PREFIX.concat(filePath);
-        // int index = filePath.indexOf(".xls");
-        // filePath = "/".concat(filePath.substring(0, index)).concat(OUTPUT_FILE_PREFIX).concat(".xls");
-        System.out.println("ANUJ : FILE PATH IS : " + filePath);
         LOG.debug("writeData started, filePath:" + filePath + ", data map size:" + map.size() + ", data map:" + map);
         try {
 
@@ -308,8 +309,6 @@ public class ExcelDataLoader implements Loader {
      * @throws IOException if an IO Exception occurs
      */
     private void writeExcelData(String filePath, Map<String, List<Map<String, Object>>> data) throws IOException {
-        System.out.println("writeExcelData started" + filePath + data.size());
-
         LOG.debug("writeExcelData started" + filePath + data.size());
         try {
             ResourceLoader resource = new ResourceLoader(filePath);
@@ -401,7 +400,6 @@ public class ExcelDataLoader implements Loader {
         if (cell == null) {
             cell = row.createCell(columnNum);
         }
-
         cell.setCellType(Cell.CELL_TYPE_STRING);
         cell.setCellValue(value);
     }

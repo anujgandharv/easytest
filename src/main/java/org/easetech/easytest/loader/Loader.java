@@ -26,7 +26,7 @@ public interface Loader {
     Map<String, List<Map<String, Object>>> loadData(String[] filePaths);
     
     /**
-     * Method responsible to write the test data and actual result to the files
+     * Method responsible for writing the test data and actual result back to the file
      * @param filePath the path to the file to which data needs to be written
      * @param actualData a Map consisting of the methodName as key and a List of Key/value pairs as the value of the Map. 
      * This Map contains the input as well as output data 
