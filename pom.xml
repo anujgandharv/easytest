@@ -38,16 +38,11 @@
   <system>GitHub</system>
   <url>https://github.com/EaseTech/easytest/issues</url>
  </issueManagement>
- <distributionManagement>
-  <repository>
-   <id>EasyTest</id>
-   <url>https://github.com/EaseTech/easytest.git</url>
-  </repository>
- </distributionManagement>
+
  <scm>
-  <connection>scm:git:git@github.com:EaseTech/easytest.git</connection>
+  <connection>scm:git:git//github.com/EaseTech/easytest.git</connection>
   <developerConnection>scm:git:git@github.com:EaseTech/easytest.git</developerConnection>
-  <url>scm:git:git@github.com:EaseTech/easytest.git</url>
+  <url>https://github.com/EaseTech/easytest</url>
  </scm>
 
  <build>
