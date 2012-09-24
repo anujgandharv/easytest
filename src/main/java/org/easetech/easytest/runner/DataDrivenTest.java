@@ -1,3 +1,4 @@
+
 package org.easetech.easytest.runner;
 
 import java.lang.reflect.Field;
@@ -64,28 +65,28 @@ import org.slf4j.LoggerFactory;
 public class DataDrivenTest extends Suite {
 
     /**
-     * The list of files that are used by the {@link Loader}s {@link Loader#writeData(String, Map)} 
-     * functionality to write the test data back to the file. This is also passed to the {@link RunAftersWithOutputData} method.
+     * The list of files that are used by the {@link Loader}s {@link Loader#writeData(String, Map)} functionality to
+     * write the test data back to the file. This is also passed to the {@link RunAftersWithOutputData} method.
      */
     private String[] dataFiles;
     /**
-     * The instance of {@link Loader} that is currently being used. 
-     * This is also passed to the {@link RunAftersWithOutputData}'s constructor which is responsible 
-     * for calling the right {@link Loader#writeData(String, Map)} based on the {@link Loader} instance.
+     * The instance of {@link Loader} that is currently being used. This is also passed to the
+     * {@link RunAftersWithOutputData}'s constructor which is responsible for calling the right
+     * {@link Loader#writeData(String, Map)} based on the {@link Loader} instance.
      * 
      */
     private Loader dataLoader = null;
-    
+
     /**
      * An instance of {@link Map} that contains the data to be written to the File
      */
     private static Map<String, List<Map<String, Object>>> writableData = new HashMap<String, List<Map<String, Object>>>();
-    
+
     /**
      * The default rowNum within the {@link #writableData}'s particular method data.
      */
     private static int rowNum = 0;
-    
+
     /**
      * The name of the method currently being executed. Used for populating the {@link #writableData} map.
      */
@@ -272,7 +273,7 @@ public class DataDrivenTest extends Suite {
          */
         @Override
         protected void validateTestMethods(List<Throwable> errors) {
-            //Do Nothing as we now support public non void arg test methods
+            // Do Nothing as we now support public non void arg test methods
         }
 
         /**
@@ -509,8 +510,8 @@ public class DataDrivenTest extends Suite {
              * <li>We find the exact place in the test input data for which this method was executed,
              * <li>We put the returned result in the map of input test data. The entry in the map has the key :
              * {@link Loader#ACTUAL_RESULT} and the value is the returned value by the test method.
-             * <li>If expected result{@link Loader#EXPECTED_RESULT} exist in user input data then we compare it with actual result and 
-             *  put the test status either passed/failed. The entry in the map has the key :
+             * <li>If expected result{@link Loader#EXPECTED_RESULT} exist in user input data then we compare it with
+             * actual result and put the test status either passed/failed. The entry in the map has the key :
              * {@link Loader#TEST_STATUS} and the value is the either PASSED or FAILED.
              * 
              * We finally write the test data to the file.
@@ -530,10 +531,10 @@ public class DataDrivenTest extends Suite {
                             Object returnObj = method.invokeExplosively(freshInstance, values);
                             if (returnObj != null) {
                                 LOG.debug("returnObj:" + returnObj);
-                                //checking and assigning the map method name.
+                                // checking and assigning the map method name.
                                 if (!mapMethodName.equals(method.getMethod().getName())) {
                                     // if mapMethodName is not same as the current executing method name
-                                	// then assign that to mapMethodName to write to writableData                                	
+                                    // then assign that to mapMethodName to write to writableData
                                     mapMethodName = method.getMethod().getName();
                                     // initialize the row number.
                                     rowNum = 0;
@@ -542,24 +543,23 @@ public class DataDrivenTest extends Suite {
                                 if (writableData.get(mapMethodName) != null) {
                                     LOG.debug("writableData.get(mapMethodName)" + writableData.get(mapMethodName)
                                         + " ,rowNum:" + rowNum);
-                                    Map<String,Object> writableRow = writableData.get(mapMethodName).get(rowNum);
-                                    writableRow.put(Loader.ACTUAL_RESULT, returnObj);     
-                            		
-                            		Object expectedResult = writableRow.get(Loader.EXPECTED_RESULT);
-                            		// if expected result exist in user input test data, 
-                            		// then compare that with actual output result 
-                            		// and write the status back to writable map data.
-                            		if(expectedResult != null) {
-                            			LOG.debug("Expected result exists");
-                            			if(expectedResult.toString().equals(returnObj.toString())){
-                            				writableRow.put(Loader.TEST_STATUS,Loader.TEST_PASSED);
-                            			} else {
-                            				writableRow.put(Loader.TEST_STATUS,Loader.TEST_FAILED);
-                            			}                            			
-                            		}
-                            		rowNum++;
-                                }
+                                    Map<String, Object> writableRow = writableData.get(mapMethodName).get(rowNum);
+                                    writableRow.put(Loader.ACTUAL_RESULT, returnObj);
 
+                                    Object expectedResult = writableRow.get(Loader.EXPECTED_RESULT);
+                                    // if expected result exist in user input test data,
+                                    // then compare that with actual output result
+                                    // and write the status back to writable map data.
+                                    if (expectedResult != null) {
+                                        LOG.debug("Expected result exists");
+                                        if (expectedResult.toString().equals(returnObj.toString())) {
+                                            writableRow.put(Loader.TEST_STATUS, Loader.TEST_PASSED);
+                                        } else {
+                                            writableRow.put(Loader.TEST_STATUS, Loader.TEST_FAILED);
+                                        }
+                                    }
+                                    rowNum++;
+                                }
 
                             }
                         } catch (CouldNotGenerateValueException e) {
@@ -625,7 +625,7 @@ public class DataDrivenTest extends Suite {
          */
         @Override
         protected void validateTestMethods(List<Throwable> errors) {
-            //Do Nothing as we now support non void methods
+            // Do Nothing as we now support non void methods
         }
 
         /**
@@ -836,7 +836,9 @@ public class DataDrivenTest extends Suite {
     /**
      * Method that determines the right Loader and the right Data Files for the "write output data" functionality
      * supported by the EasyTest Framework.
-     * @param testData an instance of {@link DataLoader} that helps in identifying the right {@link Loader} to write the data back to the file.
+     * 
+     * @param testData an instance of {@link DataLoader} that helps in identifying the right {@link Loader} to write the
+     *            data back to the file.
      */
     private void determineLoader(DataLoader testData) {
         dataFiles = testData.filePaths();
