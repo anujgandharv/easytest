@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An implementation of {@link Suite} that encapsulates the {@link EasyTestRunner} in order to provide users with clear
+ * A Spring based implementation of {@link Suite} that encapsulates the {@link EasyTestRunner} in order to provide users with clear
  * indication of which test method is run and what is the input test data that the method is run with. For example, when
  * a user runs the test method with name : <B><I>getTestData</I></B> with the following test data:
  * <ul>
@@ -60,6 +60,9 @@ import org.slf4j.LoggerFactory;
  * This gives user the clear picture of which test was run with which input test data.
  * 
  * For details on the actual Runner implementation, see {@link EasyTestRunner}
+ * 
+ * This Runner supports all the functionality that a traditional {@link SpringJUnit4ClassRunner} supports. It wraps the 
+ * {@link SpringJUnit4ClassRunner} with the support that EasyTest framework provides.
  * 
  * @author Anuj Kumar
  * 
