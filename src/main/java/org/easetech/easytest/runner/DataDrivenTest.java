@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An implementation of {@link Suite} that encapsulates the {@link EasyTestRunner} in order to provide users with clear
+ * An implementation of {@link Suite} that encapsulates the {@link DataDrivenTestRunner} in order to provide users with clear
  * indication of which test method is run and what is the input test data that the method is run with. For example, when
  * a user runs the test method with name : <B><I>getTestData</I></B> with the following test data:
  * <ul>
@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * 
  * This gives user the clear picture of which test was run with which input test data.
  * 
- * For details on the actual Runner implementation, see {@link EasyTestRunner}
+ * For details on the actual Runner implementation, see {@link DataDrivenTestRunner}
  * 
  * @author Anuj Kumar
  * 
@@ -156,7 +156,7 @@ public class DataDrivenTest extends Suite {
 
         /**
          * 
-         * Construct a new EasyTestRunner
+         * Construct a new DataDrivenTestRunner
          * 
          * @param klass the test class whose test methods needs to be executed
          * @throws InitializationError if any error occurs
@@ -205,7 +205,7 @@ public class DataDrivenTest extends Suite {
                 return frameworkMethods;
             }
             // superMethodName variable comes from the enclosing DataDrivenTest class.
-            // It holds the name of the test method on which the EasyTestRunner instance will work.
+            // It holds the name of the test method on which the DataDrivenTestRunner instance will work.
             if (superMethodName == null) {
                 Assert.fail("Cannot compute Test Methods to run");
             }
@@ -651,11 +651,11 @@ public class DataDrivenTest extends Suite {
     }
 
     /**
-     * A List of {@link EasyTestRunner}s and {@link GivenTestMethodsRunner}. If the entry in the list is an instance of
-     * {@link EasyTestRunner}, then the runner corresponds to a single method in the executing test class. Since
+     * A List of {@link DataDrivenTestRunner}s and {@link GivenTestMethodsRunner}. If the entry in the list is an instance of
+     * {@link DataDrivenTestRunner}, then the runner corresponds to a single method in the executing test class. Since
      * EasyTest is a data driven testing framework, a single test can be run multiple times by providing multiple set of
      * test data from outside of the test. In order to give users a clear picture of the test currently in execution,
-     * each method in the test class is wrapped in their own {@link EasyTestRunner}. Each {@link EasyTestRunner} will
+     * each method in the test class is wrapped in their own {@link DataDrivenTestRunner}. Each {@link DataDrivenTestRunner} will
      * internally create a list of methods based on the number i=of input test data for the given method. For ex. if
      * there is a method <B><I>getTestData</I></B> in the test class which needs to be run with two sets of input data:
      * <ul>
@@ -663,7 +663,7 @@ public class DataDrivenTest extends Suite {
      * <li>libraryId=34 , itemId=67</li><br>
      * <br>
      * 
-     * then, for such a scenario a single {@link EasyTestRunner} instance will be created for the test method
+     * then, for such a scenario a single {@link DataDrivenTestRunner} instance will be created for the test method
      * <B>getTestData</B> which will contain two test methods to run with the following name:
      * <ul>
      * <li>getTestData{libraryId=1,itemId=2}</li>
@@ -678,7 +678,7 @@ public class DataDrivenTest extends Suite {
     private final ArrayList<Runner> runners = new ArrayList<Runner>();
 
     /**
-     * The current name of the method. Normally used by the enclosed {@link EasyTestRunner} class to identify the right
+     * The current name of the method. Normally used by the enclosed {@link DataDrivenTestRunner} class to identify the right
      * method name.
      */
     private String superMethodName;
@@ -691,7 +691,7 @@ public class DataDrivenTest extends Suite {
     /**
      * Get the children Runners
      * 
-     * @return a list of {@link EasyTestRunner}
+     * @return a list of {@link DataDrivenTestRunner}
      */
     @Override
     protected List<Runner> getChildren() {
@@ -701,7 +701,7 @@ public class DataDrivenTest extends Suite {
     /**
      * 
      * Construct a new DataDrivenTest. During construction, we will load the test data, and then we will create a list
-     * of {@link EasyTestRunner}. each instance of {@link EasyTestRunner} in the list will correspond to a single method
+     * of {@link DataDrivenTestRunner}. each instance of {@link DataDrivenTestRunner} in the list will correspond to a single method
      * in the Test Class under test.<br>
      * The algorithm is as follows:<br>
      * <ul>
@@ -712,12 +712,12 @@ public class DataDrivenTest extends Suite {
      * <ol>
      * <li>If method has {@link DataLoader} annotation, it means that there is test data associated with the test
      * method.<br>
-     * In such a case create an new {@link EasyTestRunner} which will take care of actually loading the test data.
+     * In such a case create an new {@link DataDrivenTestRunner} which will take care of actually loading the test data.
      * <li>If method does not have a {@link DataLoader} annotation, then:
      * <ol>
      * <li>Check if there already exists data for the method. This is possible as the data could have been loaded at the
      * class level.<br>
-     * <li>If the data for the given method exists, create a new {@link EasyTestRunner} instance to take care of
+     * <li>If the data for the given method exists, create a new {@link DataDrivenTestRunner} instance to take care of
      * executing all the test scenarios for the given test method.
      * <li>If the data does not exists for the given test method, put it aside in a list of unused methods,
      * </ol>
