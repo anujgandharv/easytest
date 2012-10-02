@@ -1,6 +1,7 @@
 
 package org.easetech.easytest.runner;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,7 +9,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.aopalliance.intercept.MethodInterceptor;
 import org.easetech.easytest.annotation.DataLoader;
+import org.easetech.easytest.annotation.Intercept;
 import org.easetech.easytest.annotation.Param;
 import org.easetech.easytest.loader.DataConverter;
 import org.easetech.easytest.loader.Loader;
@@ -35,9 +38,11 @@ import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.AopConfigException;
+import org.springframework.aop.framework.ProxyFactory;
 
 /**
- * An implementation of {@link Suite} that encapsulates the {@link DataDrivenTestRunner} in order to provide users with clear
+ * An implementation of {@link Suite} that encapsulates the {@link EasyTestRunner} in order to provide users with clear
  * indication of which test method is run and what is the input test data that the method is run with. For example, when
  * a user runs the test method with name : <B><I>getTestData</I></B> with the following test data:
  * <ul>
@@ -54,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * 
  * This gives user the clear picture of which test was run with which input test data.
  * 
- * For details on the actual Runner implementation, see {@link DataDrivenTestRunner}
+ * For details on the actual Runner implementation, see {@link EasyTestRunner}
  * 
  * @author Anuj Kumar
  * 
@@ -125,6 +130,10 @@ public class DataDrivenTestRunner extends Suite {
      * contains all the available test data key / value pairs for easy consumption by the user. It also supports user
      * defined custom Objects as parameters.<br>
      * <br>
+     * Finally, EasyTest also supports {@link Intercept} annotation. This annotation can be used to intercept calls to the 
+     * test subject that is currently being tested. For eg. if you want to capture how much time a particular method of the actual service class is taking,
+     * then you can mark the field representing the testSubject with {@link Intercept} annotation. 
+     * The framework also provides convenient way to write your own custom method interceptors.
      * 
      * @author Anuj Kumar
      */
@@ -136,6 +145,12 @@ public class DataDrivenTestRunner extends Suite {
         List<FrameworkMethod> frameworkMethods;
         
         /**
+         * The actual instance of the test class. 
+         * This is extremely handy in cases where we want to reflectively set instance fields on a test class.
+         */
+        Object testInstance;
+        
+        /**
          * 
          * Construct a new DataDrivenTestRunner
          * 
@@ -144,6 +159,42 @@ public class DataDrivenTestRunner extends Suite {
          */
         public EasyTestRunner(Class<?> klass) throws InitializationError {
             super(klass);
+            try {
+                testInstance = getTestClass().getOnlyConstructor().newInstance();
+                instrumentClass(getTestClass().getJavaClass());
+                
+            } catch (Exception e) {
+                Assert.fail("Test failed while trying to instrument fileds in the class : " + getTestClass().getJavaClass());
+            }
+        }
+        
+        /**
+         * Instrument the class's field that are marked with {@link Intercept} annotation
+         * @param testClass the class under test
+         * @throws IllegalArgumentException if an exception occurred
+         * @throws IllegalAccessException if an exception occurred
+         * @throws AopConfigException if an exception occurred
+         * @throws InstantiationException if an exception occurred
+         */
+        protected void instrumentClass(Class<?> testClass) throws IllegalArgumentException, IllegalAccessException, AopConfigException, InstantiationException{
+            Field[] fields = testClass.getFields();
+            for(Field field : fields){
+                Intercept interceptor = field.getAnnotation(Intercept.class);
+                if(interceptor != null){
+                    Class<? extends MethodInterceptor> interceptorClass = interceptor.interceptor();
+                    //This is the field we want to enhance
+                    Object fieldInstance = field.get(testInstance);
+                    ProxyFactory factory = new ProxyFactory();
+                    factory.setTarget(fieldInstance);
+                    factory.addAdvice(interceptorClass.newInstance());
+                    Object proxy = factory.getProxy();
+                    try{
+                        field.set(testInstance,proxy);
+                    }catch(Exception e){
+                        Assert.fail("Failed while trying to instrument the class for Intercept annotation with exception : " + e.getStackTrace());
+                    }
+                }
+            }
         }
 
         /**
@@ -256,7 +307,6 @@ public class DataDrivenTestRunner extends Suite {
          */
         @Override
         public Statement methodBlock(final FrameworkMethod method) {
-
             return new ParamAnchor(method, getTestClass());
         }
 
@@ -468,7 +518,7 @@ public class DataDrivenTestRunner extends Suite {
 
                     @Override
                     public Object createTest() throws Exception {
-                        return getTestClass().getOnlyConstructor().newInstance(complete.getConstructorArguments(true));
+                        return testInstance;
                     }
                 }.methodBlock(fTestMethod).evaluate();
             }
@@ -500,6 +550,8 @@ public class DataDrivenTestRunner extends Suite {
                     public void evaluate() throws Throwable {
                         try {
                             final Object[] values = complete.getMethodArguments(true);
+                            //Log Statistics about the test method as well as the actual testSubject, if required.
+                            
                             Object returnObj = method.invokeExplosively(freshInstance, values);
                             if (returnObj != null) {
                                 LOG.debug("returnObj:" + returnObj);
@@ -560,29 +612,7 @@ public class DataDrivenTestRunner extends Suite {
 
 
     /**
-     * A List of {@link DataDrivenTestRunner}s and {@link GivenTestMethodsRunner}. If the entry in the list is an instance of
-     * {@link DataDrivenTestRunner}, then the runner corresponds to a single method in the executing test class. Since
-     * EasyTest is a data driven testing framework, a single test can be run multiple times by providing multiple set of
-     * test data from outside of the test. In order to give users a clear picture of the test currently in execution,
-     * each method in the test class is wrapped in their own {@link DataDrivenTestRunner}. Each {@link DataDrivenTestRunner} will
-     * internally create a list of methods based on the number i=of input test data for the given method. For ex. if
-     * there is a method <B><I>getTestData</I></B> in the test class which needs to be run with two sets of input data:
-     * <ul>
-     * <li>libraryId=1 , itemId=2</li>
-     * <li>libraryId=34 , itemId=67</li><br>
-     * <br>
-     * 
-     * then, for such a scenario a single {@link DataDrivenTestRunner} instance will be created for the test method
-     * <B>getTestData</B> which will contain two test methods to run with the following name:
-     * <ul>
-     * <li>getTestData{libraryId=1,itemId=2}</li>
-     * <li>getTestData{libraryId=34,itemId=67}</li>
-     * 
-     * <br>
-     * In case the instance in the runner list is an instance of {@link GivenTestMethodsRunner}, then this runner will
-     * contain ALL the test methods that does not have a data defined for them. In case it is a simple JUnit test(with @Test
-     * annotation and with no parameters), then the runner will simply execute the method. In case the test method is of
-     * any other type, it will throw error
+     * A List of {@link EasyTestRunner}s. 
      */
     private final List<Runner> runners = new ArrayList<Runner>();
 
@@ -609,8 +639,7 @@ public class DataDrivenTestRunner extends Suite {
     /**
      * 
      * Construct a new DataDrivenTest. During construction, we will load the test data, and then we will create a list
-     * of {@link DataDrivenTestRunner}. each instance of {@link DataDrivenTestRunner} in the list will correspond to a single method
-     * in the Test Class under test.<br>
+     * of {@link EasyTestRunner}.
      * The algorithm is as follows:<br>
      * <ul>
      * <li>STEP 1: Load the test data. This will also do the check whether there exists a {@link DataLoader} annotation
@@ -620,25 +649,26 @@ public class DataDrivenTestRunner extends Suite {
      * <ol>
      * <li>If method has {@link DataLoader} annotation, it means that there is test data associated with the test
      * method.<br>
-     * In such a case create an new {@link DataDrivenTestRunner} which will take care of actually loading the test data.
+     * In such a case add the method to the methodsWithData List.
      * <li>If method does not have a {@link DataLoader} annotation, then:
      * <ol>
      * <li>Check if there already exists data for the method. This is possible as the data could have been loaded at the
      * class level.<br>
-     * <li>If the data for the given method exists, create a new {@link DataDrivenTestRunner} instance to take care of
-     * executing all the test scenarios for the given test method.
+     * <li>If the data for the given method exists, add the method to the methodsWithData List.
      * <li>If the data does not exists for the given test method, put it aside in a list of unused methods,
      * </ol>
      * </ol>
      * Iteration over each method ends.<br>
      * 
-     * If there are unused method that do not have any data associated with it, then create an instance of
-     * {@link GivenTestMethodsRunner} and pass all the unused methods to it for execution.<br>
+     * Finally create an instance of {@link EasyTestRunner} and make it use all the different types of methods we identified.<br>
+     * We need to identify methods with data and methods with no data primarily to group the test methods together
+     * as well as to efficiently create new test methods for each method that has test data associated with it.
      * This whole process will happen for each of the test class that is part of the Suite.
      * 
      * @param klass the test class
      * @throws InitializationError if an initializationError occurs
      */
+    @SuppressWarnings("unchecked")
     public DataDrivenTestRunner(Class<?> klass) throws InitializationError {
         super(klass, Collections.EMPTY_LIST);
         Class<?> testClass = getTestClass().getJavaClass();
@@ -648,10 +678,8 @@ public class DataDrivenTestRunner extends Suite {
         List<FrameworkMethod> methodsWithNoData = new ArrayList<FrameworkMethod>();
         List<FrameworkMethod> methodsWithData = new ArrayList<FrameworkMethod>();
         for (FrameworkMethod method : availableMethods) {
-            // this.superMethodName = DataConverter.getFullyQualifiedTestName(method.getName(), testClass);
             // Try loading the data if any at the method level
             if (method.getAnnotation(DataLoader.class) != null) {
-                // runners.add(new DataDrivenTestRunner(getTestClass().getJavaClass()));
                 methodsWithData.add(method);
             } else {
                 // Method does not have its own dataloader annotation
@@ -659,7 +687,6 @@ public class DataDrivenTestRunner extends Suite {
                 boolean methodDataLoaded = isMethodDataLoaded(DataConverter.getFullyQualifiedTestName(method.getName(),
                     testClass));
                 if (methodDataLoaded) {
-                    // runners.add(new DataDrivenTestRunner(getTestClass().getJavaClass()));
                     methodsWithData.add(method);
                 } else {
                     methodsWithNoData.add(method);

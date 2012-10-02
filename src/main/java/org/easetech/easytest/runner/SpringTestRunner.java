@@ -1,8 +1,6 @@
 
 package org.easetech.easytest.runner;
 
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -12,7 +10,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.aopalliance.intercept.MethodInterceptor;
 import org.easetech.easytest.annotation.DataLoader;
+import org.easetech.easytest.annotation.Intercept;
 import org.easetech.easytest.annotation.Param;
 import org.easetech.easytest.loader.DataConverter;
 import org.easetech.easytest.loader.Loader;
@@ -28,7 +28,6 @@ import org.junit.experimental.theories.ParametersSuppliedBy;
 import org.junit.experimental.theories.PotentialAssignment;
 import org.junit.experimental.theories.PotentialAssignment.CouldNotGenerateValueException;
 import org.junit.experimental.theories.internal.Assignments;
-import org.junit.experimental.theories.internal.ParameterizedAssertionError;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.runner.Runner;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -40,9 +39,12 @@ import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.AopConfigException;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * A Spring based implementation of {@link Suite} that encapsulates the {@link DataDrivenTestRunner} in order to provide users with clear
+ * A Spring based implementation of {@link Suite} that encapsulates the {@link EasyTestRunner} in order to provide users with clear
  * indication of which test method is run and what is the input test data that the method is run with. For example, when
  * a user runs the test method with name : <B><I>getTestData</I></B> with the following test data:
  * <ul>
@@ -50,8 +52,8 @@ import org.slf4j.LoggerFactory;
  * <li><B>"libraryId=2456 and itemId=789"</B></li><br>
  * <br>
  * 
- * then, {@link SpringTestRunner}, will provide the details of the executing test method in the JUnit supported IDEs like
- * this:
+ * then, {@link SpringTestRunner}, will provide the details of the executing test method in the JUnit supported IDEs
+ * like this:
  * 
  * <ul>
  * <li><B><I>getTestData{libraryId=1 ,itemId=2}</I></B></li>
@@ -59,12 +61,10 @@ import org.slf4j.LoggerFactory;
  * 
  * This gives user the clear picture of which test was run with which input test data.
  * 
- * For details on the actual Runner implementation, see {@link DataDrivenTestRunner}
- * 
- * This Runner supports all the functionality that a traditional {@link SpringJUnit4ClassRunner} supports. It wraps the 
- * {@link SpringJUnit4ClassRunner} with the support that EasyTest framework provides.
+ * For details on the actual Runner implementation, see {@link EasyTestRunner}
  * 
  * @author Anuj Kumar
+ * 
  * 
  */
 public class SpringTestRunner extends Suite {
@@ -139,25 +139,15 @@ public class SpringTestRunner extends Suite {
     private class EasyTestRunner extends SpringJUnit4ClassRunner {
 
         /**
-         * The name of the test method for which this Runner instance will generate a set of new {@link FrameworkMethod}
-         * s, one for each set of test data.
-         */
-        private final String methodName;
-
-        /**
          * Convenient class member to get the list of {@link FrameworkMethod} that this runner will execute.
          */
         List<FrameworkMethod> frameworkMethods;
-
+        
         /**
-         * Get the method name
-         * 
-         * @return the methodName
+         * The actual instance of the test class. 
+         * This is extremely handy in cases where we want to reflectively set instance fields on a test class.
          */
-        @SuppressWarnings("unused")
-        public String getMethodName() {
-            return methodName;
-        }
+        Object testInstance;
 
         /**
          * 
@@ -168,8 +158,45 @@ public class SpringTestRunner extends Suite {
          */
         public EasyTestRunner(Class<?> klass) throws InitializationError {
             super(klass);
-            this.methodName = superMethodName;
+            try {
+                testInstance = getTestClass().getOnlyConstructor().newInstance();
+                getTestContextManager().prepareTestInstance(testInstance);
+                instrumentClass(getTestClass().getJavaClass());
+                
+            } catch (Exception e) {
+                Assert.fail("Test failed while trying to instrument fileds in the class : " + getTestClass().getJavaClass());
+            }
         }
+        
+        /**
+         * Instrument the class's field that are marked with {@link Intercept} annotation
+         * @param testClass the class under test
+         * @throws IllegalArgumentException if an exception occurred
+         * @throws IllegalAccessException if an exception occurred
+         * @throws AopConfigException if an exception occurred
+         * @throws InstantiationException if an exception occurred
+         */
+        protected void instrumentClass(Class<?> testClass) throws IllegalArgumentException, IllegalAccessException, AopConfigException, InstantiationException{
+            Field[] fields = testClass.getFields();
+            for(Field field : fields){
+                Intercept interceptor = field.getAnnotation(Intercept.class);
+                if(interceptor != null){
+                    Class<? extends MethodInterceptor> interceptorClass = interceptor.interceptor();
+                    //This is the field we want to enhance
+                    Object fieldInstance = field.get(testInstance);
+                    ProxyFactory factory = new ProxyFactory();
+                    factory.setTarget(fieldInstance);
+                    factory.addAdvice(interceptorClass.newInstance());
+                    Object proxy = factory.getProxy();
+                    try{
+                        field.set(testInstance,proxy);
+                    }catch(Exception e){
+                        Assert.fail("Failed while trying to instrument the class for Intercept annotation with exception : " + e.getStackTrace());
+                    }
+                }
+            }
+        }
+
 
         /**
          * Try to collect any initialization errors, if any.
@@ -211,38 +238,43 @@ public class SpringTestRunner extends Suite {
             }
             // superMethodName variable comes from the enclosing DataDrivenTest class.
             // It holds the name of the test method on which the DataDrivenTestRunner instance will work.
-            if (superMethodName == null) {
-                Assert.fail("Cannot compute Test Methods to run");
-            }
+            // if (superMethodName == null) {
+            // Assert.fail("Cannot compute Test Methods to run");
+            // }
 
             List<FrameworkMethod> finalList = new ArrayList<FrameworkMethod>();
-            Iterator<FrameworkMethod> testMethodsItr = super.computeTestMethods().iterator();
+            //Iterator<FrameworkMethod> testMethodsItr = super.computeTestMethods().iterator();
             Class<?> testClass = getTestClass().getJavaClass();
-            while (testMethodsItr.hasNext()) {
-                FrameworkMethod method = testMethodsItr.next();
-                if (superMethodName.equals(DataConverter.getFullyQualifiedTestName(method.getName(), testClass))) {
-                    // Load the data,if any, at the method level
-                    loadData(null, method, getTestClass().getJavaClass());
-                    List<Map<String, Object>> methodData = DataContext.getData().get(superMethodName);
-                    if (methodData == null) {
-                        Assert.fail("Method with name : " + superMethodName
-                            + " expects some input test data. But there doesnt seem to be any test "
-                            + "data for the given method. Please check the Test Data file for the method data. "
-                            + "Possible cause could be a spelling mismatch.");
+            for (FrameworkMethod methodWithData : methodsWithData) {
+                String superMethodName = DataConverter.getFullyQualifiedTestName(methodWithData.getName(), testClass);
+                for(FrameworkMethod method : super.computeTestMethods()) {
+
+                    if (superMethodName.equals(DataConverter.getFullyQualifiedTestName(method.getName(), testClass))) {
+                        // Load the data,if any, at the method level
+                        loadData(null, method, getTestClass().getJavaClass());
+                        List<Map<String, Object>> methodData = DataContext.getData().get(superMethodName);
+                        if (methodData == null) {
+                            Assert.fail("Method with name : " + superMethodName
+                                + " expects some input test data. But there doesnt seem to be any test "
+                                + "data for the given method. Please check the Test Data file for the method data. "
+                                + "Possible cause could be a spelling mismatch.");
+                        }
+                        for (Map<String, Object> testData : methodData) {
+                            // Create a new FrameworkMethod for each set of test data
+                            EasyFrameworkMethod easyMethod = new EasyFrameworkMethod(method.getMethod());
+                            easyMethod.setName(method.getName().concat(testData.toString()));
+                            finalList.add(easyMethod);
+                        }
+                        // Since the runner only ever handles a single method, we break out of the loop as soon as we
+                        // have
+                        // found our method.
+                        break;
                     }
-                    for (Map<String, Object> testData : methodData) {
-                        // Create a new FrameworkMethod for each set of test data
-                        EasyFrameworkMethod easyMethod = new EasyFrameworkMethod(method.getMethod());
-                        easyMethod.setName(method.getName().concat(testData.toString()));
-                        finalList.add(easyMethod);
-                    }
-                    // Since the runner only ever handles a single method, we break out of the loop as soon as we have
-                    // found our method.
-                    break;
                 }
             }
+            finalList.addAll(methodsWithNoData);
             if (finalList.isEmpty()) {
-                Assert.fail("No method exists with the given name :" + superMethodName);
+                Assert.fail("No method exists for the Test Runner");
             }
             frameworkMethods = finalList;
             return finalList;
@@ -508,8 +540,6 @@ public class SpringTestRunner extends Suite {
 
                     @Override
                     public Object createTest() throws Exception {
-                        Object testInstance = super.createTest();
-                        getTestContextManager().prepareTestInstance(testInstance);
                         return testInstance;
                     }
                 }.methodBlock(fTestMethod).evaluate();
@@ -565,12 +595,6 @@ public class SpringTestRunner extends Suite {
                 fInvalidParameters.add(e);
             }
 
-            protected void reportParameterizedError(Throwable e, Object... params) throws Throwable {
-                if (params.length == 0)
-                    throw e;
-                throw new ParameterizedAssertionError(e, fTestMethod.getName(), params);
-            }
-
             protected void handleDataPointSuccess() {
                 successes++;
             }
@@ -578,107 +602,22 @@ public class SpringTestRunner extends Suite {
 
     }
 
-    /**
-     * A simple Runner that will only run the given test methods. The test methods to run are provided by the outer
-     * class, which normally is an extension of {@link Suite} Runner.
-     * 
-     */
-    private class GivenTestMethodsRunner extends SpringJUnit4ClassRunner {
 
-        /**
-         * The methods that needs to be run by this runner.
-         */
-        private final List<FrameworkMethod> methodsToRun;
-
-        /**
-         * 
-         * Construct a new GivenTestMethodsRunner
-         * 
-         * @param klass
-         * @throws InitializationError
-         */
-        public GivenTestMethodsRunner(Class<?> klass) throws InitializationError {
-            super(klass);
-            this.methodsToRun = unusedFrameworkMethods;
-        }
-
-        /**
-         * @return the methodsToRun
-         */
-        @SuppressWarnings("unused")
-        public List<FrameworkMethod> getMethodsToRun() {
-            return methodsToRun;
-        }
-
-        /**
-         * Validate the test methods.
-         * 
-         * @param errors list of any errors while validating test method
-         */
-        @Override
-        protected void validateTestMethods(List<Throwable> errors) {
-            //Do Nothing as we now support non void methods
-        }
-
-        /**
-         * Compute the list of {@link FrameworkMethod} that needs to be run with the given runner.
-         * 
-         * @return the list of {@link FrameworkMethod}
-         */
-        @Override
-        protected List<FrameworkMethod> computeTestMethods() {
-            List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
-            List<FrameworkMethod> methodsAvailable = super.computeTestMethods();
-            for (FrameworkMethod method : unusedFrameworkMethods) {
-                for (FrameworkMethod fMethod : methodsAvailable) {
-                    if (fMethod.getName().equals(method.getName())) {
-                        result.add(fMethod);
-                        break;
-                    }
-                }
-
-            }
-            return result;
-        }
-    }
 
     /**
-     * A List of {@link DataDrivenTestRunner}s and {@link GivenTestMethodsRunner}. If the entry in the list is an instance of
-     * {@link DataDrivenTestRunner}, then the runner corresponds to a single method in the executing test class. Since
-     * EasyTest is a data driven testing framework, a single test can be run multiple times by providing multiple set of
-     * test data from outside of the test. In order to give users a clear picture of the test currently in execution,
-     * each method in the test class is wrapped in their own {@link DataDrivenTestRunner}. Each {@link DataDrivenTestRunner} will
-     * internally create a list of methods based on the number i=of input test data for the given method. For ex. if
-     * there is a method <B><I>getTestData</I></B> in the test class which needs to be run with two sets of input data:
-     * <ul>
-     * <li>libraryId=1 , itemId=2</li>
-     * <li>libraryId=34 , itemId=67</li><br>
-     * <br>
-     * 
-     * then, for such a scenario a single {@link DataDrivenTestRunner} instance will be created for the test method
-     * <B>getTestData</B> which will contain two test methods to run with the following name:
-     * <ul>
-     * <li>getTestData{libraryId=1,itemId=2}</li>
-     * <li>getTestData{libraryId=34,itemId=67}</li>
-     * 
-     * <br>
-     * In case the instance in the runner list is an instance of {@link GivenTestMethodsRunner}, then this runner will
-     * contain ALL the test methods that does not have a data defined for them. In case it is a simple JUnit test(with @Test
-     * annotation and with no parameters), then the runner will simply execute the method. In case the test method is of
-     * any other type, it will throw error
+     * A List of {@link EasyTestRunner}s 
      */
     private final ArrayList<Runner> runners = new ArrayList<Runner>();
+    
+    /**
+     * List of {@link FrameworkMethod} that does not have any external test data associated with them.
+     */
+    private List<FrameworkMethod> methodsWithNoData = new ArrayList<FrameworkMethod>();
 
     /**
-     * The current name of the method. Normally used by the enclosed {@link DataDrivenTestRunner} class to identify the right
-     * method name.
+     * List of {@link FrameworkMethod} that does have any external test data associated with them.
      */
-    private String superMethodName;
-
-    /**
-     * List of unused {@link FrameworkMethod} that will be provided to the {@link GivenTestMethodsRunner} class.
-     */
-    private List<FrameworkMethod> unusedFrameworkMethods;
+    private List<FrameworkMethod> methodsWithData = new ArrayList<FrameworkMethod>();
 
     /**
      * Get the children Runners
@@ -692,8 +631,8 @@ public class SpringTestRunner extends Suite {
 
     /**
      * 
-     * Construct a new DataDrivenTest. During construction, we will load the test data, and then we will create a list
-     * of {@link DataDrivenTestRunner}. each instance of {@link DataDrivenTestRunner} in the list will correspond to a single method
+     * Construct a new {@link SpringTestRunner}. During construction, we will load the test data, and then we will create a list
+     * of {@link EasyTestRunner}. each instance of {@link DataDrivenTestRunner} in the list will correspond to a single method
      * in the Test Class under test.<br>
      * The algorithm is as follows:<br>
      * <ul>
@@ -704,44 +643,45 @@ public class SpringTestRunner extends Suite {
      * <ol>
      * <li>If method has {@link DataLoader} annotation, it means that there is test data associated with the test
      * method.<br>
-     * In such a case create an new {@link DataDrivenTestRunner} which will take care of actually loading the test data.
+     * In such a case add the method to the methodsWithData List.
      * <li>If method does not have a {@link DataLoader} annotation, then:
      * <ol>
      * <li>Check if there already exists data for the method. This is possible as the data could have been loaded at the
      * class level.<br>
-     * <li>If the data for the given method exists, create a new {@link DataDrivenTestRunner} instance to take care of
-     * executing all the test scenarios for the given test method.
+     * <li>If the data for the given method exists, add the method to the methodsWithData List.
      * <li>If the data does not exists for the given test method, put it aside in a list of unused methods,
      * </ol>
      * </ol>
      * Iteration over each method ends.<br>
      * 
-     * If there are unused method that do not have any data associated with it, then create an instance of
-     * {@link GivenTestMethodsRunner} and pass all the unused methods to it for execution.<br>
+     * Finally create an instance of {@link EasyTestRunner} and make it use all the different types of methods we identified.<br>
+     * We need to identify methods with data and methods with no data primarily to group the test methods together
+     * as well as to efficiently create new test methods for each method that has test data associated with it.
      * This whole process will happen for each of the test class that is part of the Suite.
      * 
      * @param klass the test class
      * @throws InitializationError if an initializationError occurs
      */
+    @SuppressWarnings("unchecked")
     public SpringTestRunner(Class<?> klass) throws InitializationError {
-        super(klass, Collections.<Runner> emptyList());
+        super(klass, Collections.EMPTY_LIST);
         Class<?> testClass = getTestClass().getJavaClass();
         // Load the data at the class level, if any.
         loadData(klass, null, testClass);
         List<FrameworkMethod> availableMethods = getTestClass().getAnnotatedMethods(Test.class);
         List<FrameworkMethod> methodsWithNoData = new ArrayList<FrameworkMethod>();
+        List<FrameworkMethod> methodsWithData = new ArrayList<FrameworkMethod>();
         for (FrameworkMethod method : availableMethods) {
-            this.superMethodName = DataConverter.getFullyQualifiedTestName(method.getName(), testClass);
             // Try loading the data if any at the method level
             if (method.getAnnotation(DataLoader.class) != null) {
-                runners.add(new EasyTestRunner(getTestClass().getJavaClass()));
+                methodsWithData.add(method);
             } else {
                 // Method does not have its own dataloader annotation
                 // Does method have data already loaded at the class level?
                 boolean methodDataLoaded = isMethodDataLoaded(DataConverter.getFullyQualifiedTestName(method.getName(),
                     testClass));
                 if (methodDataLoaded) {
-                    runners.add(new EasyTestRunner(getTestClass().getJavaClass()));
+                    methodsWithData.add(method);
                 } else {
                     methodsWithNoData.add(method);
                 }
@@ -751,10 +691,22 @@ public class SpringTestRunner extends Suite {
         // Finally create a runner for methods that do not have Data specified with them.
         // These are potentially the methods with no method parameters and with @Test annotation.
         if (!methodsWithNoData.isEmpty()) {
-            unusedFrameworkMethods = methodsWithNoData;
-            runners.add(new GivenTestMethodsRunner(klass));
+            this.methodsWithNoData = methodsWithNoData;
+
         }
-        superMethodName = null;
+        if (!methodsWithData.isEmpty()) {
+            this.methodsWithData = methodsWithData;
+        }
+        runners.add(new EasyTestRunner(klass));
+    }
+    
+    /**
+     * Returns a {@link Statement}: We override this method as it was being called twice 
+     * for the same class. Looks like a bug in JUnit.
+     */
+    @Override
+    protected Statement withBeforeClasses(Statement statement) {
+        return statement;
     }
 
     /**
