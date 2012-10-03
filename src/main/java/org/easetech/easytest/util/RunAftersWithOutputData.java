@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * the test data to the file at the end of executing all the test methods in the test cases.
  * 
  */
-public class RunAftersWithOutputData extends RunAfters {
+public class RunAftersWithOutputData extends Statement {
 
     /**
      * An instance of logger associated with the test framework.
@@ -70,7 +70,7 @@ public class RunAftersWithOutputData extends RunAfters {
      */
     public RunAftersWithOutputData(Statement next, List<FrameworkMethod> afters, Object target, Loader loader,
         String[] filePath, Map<String, List<Map<String, Object>>> writableData) {
-        super(next, afters, target);
+        super();
         this.fNext = next;
         this.fAfters = afters;
         this.fTarget = target;
