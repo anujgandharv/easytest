@@ -100,7 +100,6 @@
                    <version>2.2.2</version>
                    <configuration>
                        <username>anujgandharv</username>
-                       <password>deep9810356403</password>
    
                        <mavenExecutorId>forked-path</mavenExecutorId>
                    </configuration>
