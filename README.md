@@ -1,5 +1,6 @@
 EasyTest : A Data Driven Testing approach to JUnit
 ------------------------------------------------------------------------------------------------------
+REFER : https://github.com/EaseTech/easytest for up to date version of EasyTest.
 
 An extension of JUnit to perform Data Driven Testing using annotations.
 
